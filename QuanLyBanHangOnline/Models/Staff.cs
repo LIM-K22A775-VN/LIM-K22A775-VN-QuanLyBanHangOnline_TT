@@ -8,7 +8,7 @@ namespace quanlybanhangonline.Models
         public int IdStaff { get; set; }
 
         [Required]
-        public string Username { get; set; } // tk
+        public string Email  { get; set; } // tk
 
         [Required]
         public string Password { get; set; } // mk

@@ -5,36 +5,48 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QuanLyBanHangOnline.Data;
 using quanlybanhangonline.Models;
+using Microsoft.AspNetCore.Authorization;
+using BCrypt.Net;
+using QuanLyBanHangOnline.DTO.Users;
 
 namespace QuanLyBanHangOnline.Controllers
 {
+    [Authorize(Roles = "User")]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly UseContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public UsersController(UseContext context)
+        public UsersController(ApplicationDbContext context)
         {
             _context = context;
         }
 
         // GET: api/Users
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUser()
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetUser()
         {
           if (_context.User == null)
           {
               return NotFound();
           }
-            return await _context.User.ToListAsync();
+            return await _context.User
+        .Select(u => new UserDto
+        {
+            IdUser = u.IdUser,
+            Email = u.Email,
+            FullName = u.FullName,
+            Phone = u.Phone,
+            Address = u.Address
+        })
+        .ToListAsync();
         }
 
         // GET: api/Users/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<ActionResult<UserDto>> GetUser(int id)
         {
           if (_context.User == null)
           {
@@ -47,54 +59,57 @@ namespace QuanLyBanHangOnline.Controllers
                 return NotFound();
             }
 
-            return user;
+             return new UserDto
+    {
+        IdUser = user.IdUser,
+        Email = user.Email,
+        FullName = user.FullName,
+        Phone = user.Phone,
+        Address = user.Address
+    };
         }
 
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, User user)
+        public async Task<IActionResult> PutUser(int id, UpdateUserDto dto)
         {
-            if (id != user.IdUser)
+            var user = await _context.User.FindAsync(id);
+            if (user == null) return NotFound();
+
+            user.FullName = dto.FullName ?? user.FullName;
+            user.Phone = dto.Phone ?? user.Phone;
+            user.Address = dto.Address ?? user.Address;
+
+            if (!string.IsNullOrEmpty(dto.Password))
             {
-                return BadRequest();
+                user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             }
 
-            _context.Entry(user).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
         // POST: api/Users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
+        public async Task<IActionResult> PostUser(CreateUserDto dto)
         {
-          if (_context.User == null)
-          {
-              return Problem("Entity set 'UseContext.User'  is null.");
-          }
+            var user = new User
+            {
+                Email = dto.Email,
+                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                FullName = dto.FullName ?? "",
+                Phone = dto.Phone ?? "",
+                Address = dto.Address ?? ""
+            };
+
             _context.User.Add(user);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUser", new { id = user.IdUser }, user);
+            return Ok();
         }
+
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]

@@ -2,21 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QuanLyBanHangOnline.Data;
 using quanlybanhangonline.Models;
 
 namespace QuanLyBanHangOnline.Controllers
 {
+    [Authorize(Roles = "Staff")]
     [Route("api/[controller]")]
     [ApiController]
     public class StaffsController : ControllerBase
     {
-        private readonly staffContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public StaffsController(staffContext context)
+        public StaffsController(ApplicationDbContext context)
         {
             _context = context;
         }

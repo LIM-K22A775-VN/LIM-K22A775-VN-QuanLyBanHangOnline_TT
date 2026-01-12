@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QuanLyBanHangOnline.Data;
 using quanlybanhangonline.Models;
 
 namespace QuanLyBanHangOnline.Controllers
@@ -14,9 +13,9 @@ namespace QuanLyBanHangOnline.Controllers
     [ApiController]
     public class ReviewsController : ControllerBase
     {
-        private readonly reviewContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public ReviewsController(reviewContext context)
+        public ReviewsController(ApplicationDbContext context)
         {
             _context = context;
         }

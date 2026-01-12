@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QuanLyBanHangOnline.Data;
 using quanlybanhangonline.Models;
 
 namespace QuanLyBanHangOnline.Controllers
@@ -14,9 +13,9 @@ namespace QuanLyBanHangOnline.Controllers
     [ApiController]
     public class OrderDetailsController : ControllerBase
     {
-        private readonly orderdetailContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public OrderDetailsController(orderdetailContext context)
+        public OrderDetailsController(ApplicationDbContext context)
         {
             _context = context;
         }

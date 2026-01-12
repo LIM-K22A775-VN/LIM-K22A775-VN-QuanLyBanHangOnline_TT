@@ -2,21 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QuanLyBanHangOnline.Data;
 using quanlybanhangonline.Models;
 
 namespace QuanLyBanHangOnline.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class AdminsController : ControllerBase
     {
-        private readonly adminContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public AdminsController(adminContext context)
+        public AdminsController(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -90,6 +92,7 @@ namespace QuanLyBanHangOnline.Controllers
           {
               return Problem("Entity set 'adminContext.Admin'  is null.");
           }
+            admin.Password = BCrypt.Net.BCrypt.HashPassword(admin.Password);
             _context.Admin.Add(admin);
             await _context.SaveChangesAsync();
 

@@ -1,7 +1,43 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using QuanLyBanHangOnline.Data;
+
+//Cấu hình JWT 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.OpenApi.Models;
+
+
+
 var builder = WebApplication.CreateBuilder(args);
+
+
+//Cấu hình Authentication  , JWT 
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
+        )
+    };
+});
+
+
+
+
 
 // Thêm dịch vụ CORS vào container
 builder.Services.AddCors(options =>
@@ -18,29 +54,51 @@ builder.Services.AddCors(options =>
 
 
 
-builder.Services.AddDbContext<reviewContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("reviewContext") ?? throw new InvalidOperationException("Connection string 'reviewContext' not found.")));
-builder.Services.AddDbContext<orderdetailContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("orderdetailContext") ?? throw new InvalidOperationException("Connection string 'orderdetailContext' not found.")));
-builder.Services.AddDbContext<orderContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("orderContext") ?? throw new InvalidOperationException("Connection string 'orderContext' not found.")));
-builder.Services.AddDbContext<QuanLyBanHangOnlineContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("QuanLyBanHangOnlineContext") ?? throw new InvalidOperationException("Connection string 'QuanLyBanHangOnlineContext' not found.")));
-builder.Services.AddDbContext<productContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("productContext") ?? throw new InvalidOperationException("Connection string 'productContext' not found.")));
-builder.Services.AddDbContext<UseContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("UseContext") ?? throw new InvalidOperationException("Connection string 'UseContext' not found.")));
-builder.Services.AddDbContext<staffContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("staffContext") ?? throw new InvalidOperationException("Connection string 'staffContext' not found.")));
-builder.Services.AddDbContext<adminContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("adminContext") ?? throw new InvalidOperationException("Connection string 'adminContext' not found.")));
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("QuanLyBanHangOnlineContext") ?? throw new InvalidOperationException("Connection string 'reviewContext' not found.")));
 
 // Add services to the container.
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+//builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "QuanLyBanHangOnline API",
+        Version = "v1"
+    });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Nhập: Bearer {token}"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
 
 var app = builder.Build();
 
@@ -55,7 +113,10 @@ if (app.Environment.IsDevelopment())
 // QUAN TRỌNG: Kích hoạt CORS tại đây
 app.UseCors("AllowAngular");
 
+//Bật middleware
+app.UseAuthentication();
 app.UseAuthorization();
+
 
 app.MapControllers();
 

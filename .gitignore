@@ -21,3 +21,5 @@ secrets.json
 *.log
 *.suo
 *.user
+
+appsettings.Production.json
