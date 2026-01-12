@@ -1,0 +1,23 @@
+## Thư mục build và kết quả đầu ra
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+## Visual Studio files
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+## File cấu hình cá nhân (chứa connection string, mật khẩu)
+appsettings.Development.json
+secrets.json
+
+## Thư mục của trình duyệt và công cụ hỗ trợ
+.vshost.exe
+*.log
+*.suo
+*.user
