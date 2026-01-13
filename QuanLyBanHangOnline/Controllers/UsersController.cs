@@ -9,10 +9,11 @@ using quanlybanhangonline.Models;
 using Microsoft.AspNetCore.Authorization;
 using BCrypt.Net;
 using QuanLyBanHangOnline.DTO.Users;
+using System.Security.Claims;
 
 namespace QuanLyBanHangOnline.Controllers
 {
-    [Authorize(Roles = "User")]
+    [Authorize(Roles = "User,Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -26,6 +27,7 @@ namespace QuanLyBanHangOnline.Controllers
 
         // GET: api/Users
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetUser()
         {
           if (_context.User == null)
@@ -48,7 +50,16 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDto>> GetUser(int id)
         {
-          if (_context.User == null)
+
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
+            // Chặn nếu không phải Admin và cũng không phải chính chủ
+            if (currentUserRole == "User" && currentUserId != id.ToString())
+            {
+                return Forbid();
+            }
+
+            if (_context.User == null)
           {
               return NotFound();
           }
@@ -74,6 +85,15 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, UpdateUserDto dto)
         {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
+
+            // Chỉ chính chủ hoặc Admin mới được sửa
+            if (currentUserRole == "User" && currentUserId != id.ToString())
+            {
+                return Forbid();
+            }
+
             var user = await _context.User.FindAsync(id);
             if (user == null) return NotFound();
 
@@ -93,6 +113,7 @@ namespace QuanLyBanHangOnline.Controllers
         // POST: api/Users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> PostUser(CreateUserDto dto)
         {
             var user = new User
@@ -113,6 +134,7 @@ namespace QuanLyBanHangOnline.Controllers
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             if (_context.User == null)

@@ -114,8 +114,8 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAngular");
 
 //Bật middleware
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseAuthentication(); // Xác thực: Bạn là ai?
+app.UseAuthorization();  // Phân quyền: Bạn được làm gì?
 
 
 app.MapControllers();
