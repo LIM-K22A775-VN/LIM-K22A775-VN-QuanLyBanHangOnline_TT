@@ -17,5 +17,11 @@ namespace quanlybanhangonline.Models
         public string FullName { get; set; } // Tên
         public string Phone { get; set; }    // SĐT
         public string Address { get; set; }  // Địa chỉ
+
+
+
+        // refresh token
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
     }
 }

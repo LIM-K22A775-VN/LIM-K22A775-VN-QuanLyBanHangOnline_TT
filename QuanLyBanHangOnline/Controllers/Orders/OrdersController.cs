@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 using quanlybanhangonline.Models;
 
-namespace QuanLyBanHangOnline.Controllers
+namespace QuanLyBanHangOnline.Controllers.Orders
 {
     [Authorize(Roles = "Staff,Admin")]
     [Route("api/[controller]")]
@@ -27,10 +27,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrder()
         {
-          if (_context.Order == null)
-          {
-              return NotFound();
-          }
+            if (_context.Order == null)
+            {
+                return NotFound();
+            }
             return await _context.Order.ToListAsync();
         }
 
@@ -38,10 +38,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Order>> GetOrder(int id)
         {
-          if (_context.Order == null)
-          {
-              return NotFound();
-          }
+            if (_context.Order == null)
+            {
+                return NotFound();
+            }
             var order = await _context.Order.FindAsync(id);
 
             if (order == null)
@@ -88,10 +88,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpPost]
         public async Task<ActionResult<Order>> PostOrder(Order order)
         {
-          if (_context.Order == null)
-          {
-              return Problem("Entity set 'orderContext.Order'  is null.");
-          }
+            if (_context.Order == null)
+            {
+                return Problem("Entity set 'orderContext.Order'  is null.");
+            }
             _context.Order.Add(order);
             await _context.SaveChangesAsync();
 

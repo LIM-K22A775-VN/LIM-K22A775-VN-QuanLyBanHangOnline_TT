@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using quanlybanhangonline.Models;
 
-namespace QuanLyBanHangOnline.Controllers
+namespace QuanLyBanHangOnline.Controllers.Products
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -24,10 +24,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetProduct()
         {
-          if (_context.Product == null)
-          {
-              return NotFound();
-          }
+            if (_context.Product == null)
+            {
+                return NotFound();
+            }
             return await _context.Product.ToListAsync();
         }
 
@@ -35,10 +35,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
-          if (_context.Product == null)
-          {
-              return NotFound();
-          }
+            if (_context.Product == null)
+            {
+                return NotFound();
+            }
             var product = await _context.Product.FindAsync(id);
 
             if (product == null)
@@ -85,10 +85,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpPost]
         public async Task<ActionResult<Product>> PostProduct(Product product)
         {
-          if (_context.Product == null)
-          {
-              return Problem("Entity set 'productContext.Product'  is null.");
-          }
+            if (_context.Product == null)
+            {
+                return Problem("Entity set 'productContext.Product'  is null.");
+            }
             _context.Product.Add(product);
             await _context.SaveChangesAsync();
 

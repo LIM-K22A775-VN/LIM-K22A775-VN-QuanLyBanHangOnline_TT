@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using quanlybanhangonline.Models;
 using QuanLyBanHangOnline.DTO.Users;
 
-namespace QuanLyBanHangOnline.Controllers
+namespace QuanLyBanHangOnline.Controllers.Staffs
 {
     [Authorize(Roles = "Staff,Admin")]  // Chỉ cần là Staff HOẶC Admin là vào được
     [Route("api/[controller]")]
@@ -31,10 +31,10 @@ namespace QuanLyBanHangOnline.Controllers
         [Authorize(Roles = "Admin")] // Chỉ Admin mới được xem toàn bộ danh sách
         public async Task<ActionResult<IEnumerable<StaffDto>>> GetStaff()
         {
-          if (_context.Staff == null)
-          {
-              return NotFound();
-          }
+            if (_context.Staff == null)
+            {
+                return NotFound();
+            }
             return await _context.Staff.Select(s => new StaffDto
             {
                 IdStaff = s.IdStaff,
@@ -63,8 +63,9 @@ namespace QuanLyBanHangOnline.Controllers
 
             if (_context.Staff == null) return NotFound();
             var staff = await _context.Staff.FindAsync(id);
-            if (staff == null)  return NotFound();
-            var staffdto = new StaffDto {
+            if (staff == null) return NotFound();
+            var staffdto = new StaffDto
+            {
                 IdStaff = staff.IdStaff,
                 FullName = staff.FullName,
                 Email = staff.Email,
@@ -92,7 +93,7 @@ namespace QuanLyBanHangOnline.Controllers
 
 
             var staff = await _context.Staff.FindAsync(id);
-            if(staff == null) { return NotFound(); }
+            if (staff == null) { return NotFound(); }
             staff.FullName = staffdto.FullName ?? staff.FullName;
             staff.Phone = staffdto.Phone ?? staff.Phone;
             staff.Address = staffdto.Address ?? staff.Address;
@@ -111,7 +112,8 @@ namespace QuanLyBanHangOnline.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PostStaff(CreatStaffDto dto)
         {
-            var staff = new Staff {
+            var staff = new Staff
+            {
                 Email = dto.Email,
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 FullName = dto.FullName ?? "Chua cap nhat",
@@ -149,6 +151,6 @@ namespace QuanLyBanHangOnline.Controllers
         {
             return (_context.Staff?.Any(e => e.IdStaff == id)).GetValueOrDefault();
         }
-  
+
     }
 }

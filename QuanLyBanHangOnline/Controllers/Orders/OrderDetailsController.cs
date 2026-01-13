@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using quanlybanhangonline.Models;
 
-namespace QuanLyBanHangOnline.Controllers
+namespace QuanLyBanHangOnline.Controllers.Orders
 {
     [Authorize(Roles = "Staff,Admin")]
     [Route("api/[controller]")]
@@ -26,10 +26,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<OrderDetail>>> GetOrderDetail()
         {
-          if (_context.OrderDetail == null)
-          {
-              return NotFound();
-          }
+            if (_context.OrderDetail == null)
+            {
+                return NotFound();
+            }
             return await _context.OrderDetail.ToListAsync();
         }
 
@@ -37,10 +37,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<OrderDetail>> GetOrderDetail(int id)
         {
-          if (_context.OrderDetail == null)
-          {
-              return NotFound();
-          }
+            if (_context.OrderDetail == null)
+            {
+                return NotFound();
+            }
             var orderDetail = await _context.OrderDetail.FindAsync(id);
 
             if (orderDetail == null)
@@ -87,10 +87,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpPost]
         public async Task<ActionResult<OrderDetail>> PostOrderDetail(OrderDetail orderDetail)
         {
-          if (_context.OrderDetail == null)
-          {
-              return Problem("Entity set 'orderdetailContext.OrderDetail'  is null.");
-          }
+            if (_context.OrderDetail == null)
+            {
+                return Problem("Entity set 'orderdetailContext.OrderDetail'  is null.");
+            }
             _context.OrderDetail.Add(orderDetail);
             await _context.SaveChangesAsync();
 

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 using quanlybanhangonline.Models;
 
-namespace QuanLyBanHangOnline.Controllers
+namespace QuanLyBanHangOnline.Controllers.Products
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -25,10 +25,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProductDetail>>> GetProductDetail()
         {
-          if (_context.ProductDetail == null)
-          {
-              return NotFound();
-          }
+            if (_context.ProductDetail == null)
+            {
+                return NotFound();
+            }
             return await _context.ProductDetail.ToListAsync();
         }
 
@@ -36,10 +36,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductDetail>> GetProductDetail(int id)
         {
-          if (_context.ProductDetail == null)
-          {
-              return NotFound();
-          }
+            if (_context.ProductDetail == null)
+            {
+                return NotFound();
+            }
             var productDetail = await _context.ProductDetail.FindAsync(id);
 
             if (productDetail == null)
@@ -86,10 +86,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpPost]
         public async Task<ActionResult<ProductDetail>> PostProductDetail(ProductDetail productDetail)
         {
-          if (_context.ProductDetail == null)
-          {
-              return Problem("Entity set 'QuanLyBanHangOnlineContext.ProductDetail'  is null.");
-          }
+            if (_context.ProductDetail == null)
+            {
+                return Problem("Entity set 'QuanLyBanHangOnlineContext.ProductDetail'  is null.");
+            }
             _context.ProductDetail.Add(productDetail);
             try
             {

@@ -13,5 +13,9 @@ namespace quanlybanhangonline.Models
 
         [Required]
         public string Password { get; set; } // mk
+
+        // refresh token
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
     }
 }

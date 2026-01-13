@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using quanlybanhangonline.Models;
 
-namespace QuanLyBanHangOnline.Controllers
+namespace QuanLyBanHangOnline.Controllers.Orders
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -24,10 +24,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Review>>> GetReview()
         {
-          if (_context.Review == null)
-          {
-              return NotFound();
-          }
+            if (_context.Review == null)
+            {
+                return NotFound();
+            }
             return await _context.Review.ToListAsync();
         }
 
@@ -35,10 +35,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Review>> GetReview(int id)
         {
-          if (_context.Review == null)
-          {
-              return NotFound();
-          }
+            if (_context.Review == null)
+            {
+                return NotFound();
+            }
             var review = await _context.Review.FindAsync(id);
 
             if (review == null)
@@ -85,10 +85,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpPost]
         public async Task<ActionResult<Review>> PostReview(Review review)
         {
-          if (_context.Review == null)
-          {
-              return Problem("Entity set 'reviewContext.Review'  is null.");
-          }
+            if (_context.Review == null)
+            {
+                return Problem("Entity set 'reviewContext.Review'  is null.");
+            }
             _context.Review.Add(review);
             await _context.SaveChangesAsync();
 

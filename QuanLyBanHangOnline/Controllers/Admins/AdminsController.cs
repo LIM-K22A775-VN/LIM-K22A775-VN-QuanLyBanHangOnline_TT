@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using quanlybanhangonline.Models;
 
-namespace QuanLyBanHangOnline.Controllers
+namespace QuanLyBanHangOnline.Controllers.Admins
 {
     [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
@@ -27,10 +27,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Admin>>> GetAdmin()
         {
-          if (_context.Admin == null)
-          {
-              return NotFound();
-          }
+            if (_context.Admin == null)
+            {
+                return NotFound();
+            }
             return await _context.Admin.ToListAsync();
         }
 
@@ -38,10 +38,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Admin>> GetAdmin(int id)
         {
-          if (_context.Admin == null)
-          {
-              return NotFound();
-          }
+            if (_context.Admin == null)
+            {
+                return NotFound();
+            }
             var admin = await _context.Admin.FindAsync(id);
 
             if (admin == null)
@@ -88,10 +88,10 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpPost]
         public async Task<ActionResult<Admin>> PostAdmin(Admin admin)
         {
-          if (_context.Admin == null)
-          {
-              return Problem("Entity set 'adminContext.Admin'  is null.");
-          }
+            if (_context.Admin == null)
+            {
+                return Problem("Entity set 'adminContext.Admin'  is null.");
+            }
             admin.Password = BCrypt.Net.BCrypt.HashPassword(admin.Password);
             _context.Admin.Add(admin);
             await _context.SaveChangesAsync();
