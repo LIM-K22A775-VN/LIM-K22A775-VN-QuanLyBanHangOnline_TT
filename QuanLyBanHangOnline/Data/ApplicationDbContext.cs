@@ -20,11 +20,15 @@ public class ApplicationDbContext : DbContext
     public DbSet<Review> Review { get; set; }
 
 
-    //  cấu hình Enum
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Order>()
             .Property(o => o.Status)
             .HasConversion<string>(); // Lưu "ChoXacNhan"   
+
+        modelBuilder.Entity<ProductDetail>()
+        .HasOne<Product>()
+        .WithOne()
+        .HasForeignKey<ProductDetail>(pd => pd.IdSP);
     }
 }

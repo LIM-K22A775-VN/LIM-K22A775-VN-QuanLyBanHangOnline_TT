@@ -10,6 +10,5 @@
             DaNhanHang = 3,    // Đã nhận hàng
             DaHuy = 4          // (Nên thêm trạng thái Hủy đơn)
         }
-
     }
 }

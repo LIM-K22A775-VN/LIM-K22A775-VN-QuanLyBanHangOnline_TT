@@ -109,27 +109,6 @@ namespace QuanLyBanHangOnline.Controllers.Products
 
             return CreatedAtAction("GetProductDetail", new { id = productDetail.IdSP }, productDetail);
         }
-
-        // DELETE: api/ProductDetails/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProductDetail(int id)
-        {
-            if (_context.ProductDetail == null)
-            {
-                return NotFound();
-            }
-            var productDetail = await _context.ProductDetail.FindAsync(id);
-            if (productDetail == null)
-            {
-                return NotFound();
-            }
-
-            _context.ProductDetail.Remove(productDetail);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
         private bool ProductDetailExists(int id)
         {
             return (_context.ProductDetail?.Any(e => e.IdSP == id)).GetValueOrDefault();

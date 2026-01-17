@@ -24,6 +24,13 @@ builder.Services.AddScoped<IUserService, UserService>();
 // Đăng ký OrderService
 builder.Services.AddScoped<IOrderService, OrderService>();
 
+builder.Services.AddHttpContextAccessor();
+// Đăng ký ProductService
+builder.Services.AddScoped<IProductService, ProductService>();
+
+
+
+
 //Cấu hình Authentication  , JWT 
 builder.Services.AddSystemAuthenticationJwt(builder.Configuration);
 
@@ -93,6 +100,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Đảm bảo có dòng này để truy cập được ảnh trong wwwroot
+app.UseStaticFiles();
 
 
 // QUAN TRỌNG: Kích hoạt CORS tại đây
