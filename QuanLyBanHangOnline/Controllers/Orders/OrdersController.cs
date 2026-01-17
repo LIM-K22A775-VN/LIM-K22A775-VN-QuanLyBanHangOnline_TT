@@ -6,6 +6,7 @@ using quanlybanhangonline.Models.DTOs;
 using quanlybanhangonline.Models;
 using QuanLyBanHangOnline.Services.Interfaces;
 using System.Security.Claims;
+using QuanLyBanHangOnline.DTO.Generic;
 
 [Authorize]
 [Route("api/[controller]")]
@@ -21,9 +22,9 @@ public class OrdersController : ControllerBase
 
     [Authorize(Roles = "Staff,Admin")]
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<OrderResponseDto>>> GetOrder()
+    public async Task<ActionResult<PagedResult<OrderResponseDto>>> GetOrder([FromQuery] PaginationParams @params)
     {
-        return Ok(await _orderService.GetAllOrdersAsync());
+        return Ok(await _orderService.GetAllOrdersAsync(@params));
     }
 
     [HttpGet("{id}")]
@@ -35,10 +36,10 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet("my-orders")]
-    public async Task<ActionResult<IEnumerable<OrderResponseDto>>> GetMyOrders()
+    public async Task<ActionResult<PagedResult<OrderResponseDto>>> GetMyOrders([FromQuery] PaginationParams @params)
     {
         int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-        return Ok(await _orderService.GetMyOrdersAsync(userId));
+        return Ok(await _orderService.GetMyOrdersAsync(userId, @params));
     }
 
     [HttpPost]

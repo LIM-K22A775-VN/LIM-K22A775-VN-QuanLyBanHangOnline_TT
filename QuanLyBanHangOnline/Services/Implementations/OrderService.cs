@@ -5,6 +5,8 @@ using quanlybanhangonline.Models;
 using quanlybanhangonline.Models.DTOs;
 using QuanLyBanHangOnline.Constants;
 using QuanLyBanHangOnline.DTO.OrderDetailRequestDto;
+using QuanLyBanHangOnline.DTO.Generic;
+using QuanLyBanHangOnline.Helpers;
 
 namespace QuanLyBanHangOnline.Services.Implementations
 {
@@ -17,16 +19,17 @@ namespace QuanLyBanHangOnline.Services.Implementations
             _context = context;
         }
 
-        public async Task<IEnumerable<OrderResponseDto>> GetAllOrdersAsync()
+        // 1. Cho Admin xem toàn bộ
+        public async Task<PagedResult<OrderResponseDto>> GetAllOrdersAsync(PaginationParams @params)
         {
-            var orders = await _context.Order
+            var query = _context.Order
                 .Include(o => o.User)
-                .Include(o => o.OrderDetails) // Nên include để MapToResponseDto có dữ liệu items
+                .Include(o => o.OrderDetails)
                     .ThenInclude(od => od.Product)
                 .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
+                .Select(o => MapToResponseDto(o));
 
-            return orders.Select(o => MapToResponseDto(o));
+            return await query.ToPagedResultAsync(@params.PageNumber, @params.PageSize);
         }
 
         public async Task<OrderResponseDto?> GetOrderByIdAsync(int id)
@@ -42,17 +45,18 @@ namespace QuanLyBanHangOnline.Services.Implementations
             return MapToResponseDto(order);
         }
 
-        public async Task<IEnumerable<OrderResponseDto>> GetMyOrdersAsync(int userId)
+        // 2. Cho Khách hàng xem đơn của họ
+        public async Task<PagedResult<OrderResponseDto>> GetMyOrdersAsync(int userId, PaginationParams @params)
         {
-            return await _context.Order
+            var query = _context.Order
                 .Where(o => o.IdUser == userId)
                 .Include(o => o.OrderDetails)
                     .ThenInclude(od => od.Product)
                 .OrderByDescending(o => o.OrderDate)
-                .Select(o => MapToResponseDto(o))
-                .ToListAsync();
-        }
+                .Select(o => MapToResponseDto(o));
 
+            return await query.ToPagedResultAsync(@params.PageNumber, @params.PageSize);
+        }
         public async Task<OrderResponseDto> CreateOrderAsync(int userId, OrderRequestDto request)
         {
             // Sử dụng Transaction để đảm bảo nếu trừ kho lỗi thì đơn hàng không được tạo
@@ -289,5 +293,6 @@ namespace QuanLyBanHangOnline.Services.Implementations
                 })
                 .ToListAsync();
         }
+
     }
 }

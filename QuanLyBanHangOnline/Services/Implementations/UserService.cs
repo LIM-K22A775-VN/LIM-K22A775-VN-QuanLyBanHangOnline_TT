@@ -2,6 +2,9 @@
 using QuanLyBanHangOnline.DTO.Users;
 using quanlybanhangonline.Models;
 using QuanLyBanHangOnline.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using QuanLyBanHangOnline.DTO.Generic;
+using QuanLyBanHangOnline.Helpers;
 
 namespace QuanLyBanHangOnline.Services.Implementations
 {
@@ -14,9 +17,10 @@ namespace QuanLyBanHangOnline.Services.Implementations
             _context = context;
         }
 
-        public async Task<IEnumerable<UserDto>> GetAllAsync()
+        public async Task<PagedResult<UserDto>> GetAllAsync(PaginationParams @params)
         {
-            return await _context.User
+            var query = _context.User
+                .OrderBy(u => u.IdUser)
                 .Select(u => new UserDto
                 {
                     IdUser = u.IdUser,
@@ -24,7 +28,10 @@ namespace QuanLyBanHangOnline.Services.Implementations
                     FullName = u.FullName,
                     Phone = u.Phone,
                     Address = u.Address
-                }).ToListAsync();
+                });
+
+            // 2. Sử dụng hàm Helper Extension để xử lý toàn bộ logic phân trang
+            return await query.ToPagedResultAsync(@params.PageNumber, @params.PageSize);
         }
 
         public async Task<UserDto?> GetByIdAsync(int id)
@@ -44,6 +51,15 @@ namespace QuanLyBanHangOnline.Services.Implementations
 
         public async Task CreateAsync(CreateUserDto dto)
         {
+            // 1. Kiểm tra xem Email đã tồn tại trong hệ thống chưa
+            var emailExists = await _context.User.AnyAsync(s => s.Email == dto.Email);
+            if (emailExists)
+            {
+                //  Custom Exception hoặc ném Exception thông thường
+                throw new Exception("Email này đã được sử dụng bởi một người dùng khác.");
+            }
+            // 2. Nếu chưa tồn tại, tiến hành tạo mới
+
             var user = new User
             {
                 Email = dto.Email,

@@ -27,8 +27,8 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddHttpContextAccessor();
 // Đăng ký ProductService
 builder.Services.AddScoped<IProductService, ProductService>();
-
-
+builder.Services.AddScoped<IStaffService, StaffService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 
 //Cấu hình Authentication  , JWT 

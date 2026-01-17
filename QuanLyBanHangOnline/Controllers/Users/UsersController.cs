@@ -11,6 +11,8 @@ using BCrypt.Net;
 using QuanLyBanHangOnline.DTO.Users;
 using System.Security.Claims;
 using QuanLyBanHangOnline.Services.Interfaces;
+using QuanLyBanHangOnline.DTO.Generic;
+using QuanLyBanHangOnline.Services.Implementations;
 
 namespace QuanLyBanHangOnline.Controllers
 {
@@ -29,9 +31,9 @@ namespace QuanLyBanHangOnline.Controllers
         // GET: api/Users
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<IEnumerable<UserDto>>> GetUser()
+        public async Task<ActionResult<PagedResult<UserDto>>> GetUser([FromQuery] PaginationParams @params)
         {
-            var users = await _userService.GetAllAsync();
+            var users = await _userService.GetAllAsync(@params);
             return Ok(users);
         }
 
@@ -60,8 +62,15 @@ namespace QuanLyBanHangOnline.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> PostUser(CreateUserDto dto)
         {
-            await _userService.CreateAsync(dto);
-            return Ok();
+            try
+            {
+                await _userService.CreateAsync(dto);
+                return Ok(new { message = "Tạo nguời dùng thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
 

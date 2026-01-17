@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QuanLyBanHangOnline.Services.Interfaces;
 using quanlybanhangonline.Models;
+using QuanLyBanHangOnline.DTO.Generic;
+using Humanizer;
+using QuanLyBanHangOnline.Helpers;
 
 namespace QuanLyBanHangOnline.Services.Implementations
 {
@@ -13,9 +16,14 @@ namespace QuanLyBanHangOnline.Services.Implementations
             _context = context;
         }
 
-        public async Task<IEnumerable<Admin>> GetAllAsync()
+        public async Task<PagedResult<Admin>> GetAllAsync(PaginationParams @params)
         {
-            return await _context.Admin.ToListAsync();
+            var query = _context.Admin 
+                .OrderBy(a => a.IdAdmin)
+                .AsQueryable();
+
+            // 2. Dùng hàm Helper đã viết để xử lý toàn bộ logic phân trang & chặn số âm
+            return await query.ToPagedResultAsync(@params.PageNumber, @params.PageSize);
         }
 
         public async Task<Admin?> GetByIdAsync(int id)
@@ -25,6 +33,16 @@ namespace QuanLyBanHangOnline.Services.Implementations
 
         public async Task CreateAsync(Admin admin)
         {
+            // 1. Kiểm tra xem Email đã tồn tại trong hệ thống chưa
+            var emailExists = await _context.Admin.AnyAsync(s => s.Email == admin.Email);
+            if (emailExists)
+            {
+                //  Custom Exception hoặc ném Exception thông thường
+                throw new Exception("Email này đã được sử dụng bởi một quản trị viên khác.");
+            }
+            // 2. Nếu chưa tồn tại, tiến hành tạo mới
+
+
             // Hash mật khẩu trước khi lưu
             admin.Password = BCrypt.Net.BCrypt.HashPassword(admin.Password);
             _context.Admin.Add(admin);

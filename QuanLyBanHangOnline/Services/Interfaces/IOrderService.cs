@@ -3,12 +3,13 @@ using quanlybanhangonline.Models.DTOs;
 using quanlybanhangonline.Models;
 using QuanLyBanHangOnline.Constants;
 using QuanLyBanHangOnline.DTO.OrderDetailRequestDto;
+using QuanLyBanHangOnline.DTO.Generic;
 
 public interface IOrderService
 {
-    Task<IEnumerable<OrderResponseDto>> GetAllOrdersAsync();
+    Task<PagedResult<OrderResponseDto>> GetAllOrdersAsync(PaginationParams @params);
     Task<OrderResponseDto?> GetOrderByIdAsync(int id);
-    Task<IEnumerable<OrderResponseDto>> GetMyOrdersAsync(int userId);
+    Task<PagedResult<OrderResponseDto>> GetMyOrdersAsync(int userId, PaginationParams @params);
     Task<OrderResponseDto> CreateOrderAsync(int userId, OrderRequestDto request);
     Task<bool> UpdateStatusAsync(int id, Enums.OrderStatus newStatus, int userId, string userRole);
     Task<bool> DeleteOrderAsync(int id, int userId, string userRole);

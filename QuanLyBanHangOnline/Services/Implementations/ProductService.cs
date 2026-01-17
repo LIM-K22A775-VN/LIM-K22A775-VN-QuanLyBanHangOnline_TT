@@ -3,6 +3,7 @@ using QuanLyBanHangOnline.DTO.Products;
 using quanlybanhangonline.Models;
 using QuanLyBanHangOnline.Services.Interfaces;
 using QuanLyBanHangOnline.DTO.Generic;
+using QuanLyBanHangOnline.Helpers;
 
 namespace QuanLyBanHangOnline.Services.Implementations
 {
@@ -21,38 +22,32 @@ namespace QuanLyBanHangOnline.Services.Implementations
 
         public async Task<PagedResult<ProductResponseDto>> GetAllAsync(PaginationParams @params)
         {
-            var query = _context.Product.AsQueryable();
+            // 1. Tạo Query lấy dữ liệu thô (Chưa thực thi SQL)
+            // Chúng ta trả về một Anonymous Object chứa cặp Product (p) và Detail (d)
+            var query = from p in _context.Product
+                        join d in _context.ProductDetail on p.IdSP equals d.IdSP into details
+                        from d in details.DefaultIfEmpty()
+                        orderby p.IdSP
+                        select new { Product = p, Detail = d };
 
-            // 1. Tính tổng số lượng bản ghi
-            var totalCount = await query.CountAsync();
+            // 2. Thực thi phân trang để lấy dữ liệu về RAM (In-memory)
+            // ToPagedResultAsync sẽ chạy SQL để lấy đúng số bản ghi của trang hiện tại
+            var pagedRawData = await query.ToPagedResultAsync(@params.PageNumber, @params.PageSize);
 
-            // 2. Xử lý điều kiện nhập số âm hoặc bằng 0
-            int pageNumber = @params.PageNumber < 1 ? 1 : @params.PageNumber;
-            int pageSize = @params.PageSize < 1 ? 10 : @params.PageSize;
+            // 3. Mapping dữ liệu thô sang DTO trên RAM
+            // Lúc này dữ liệu đã là List, nên MapToResponse sẽ chạy bình thường không bị lỗi SQL
+            var dtos = pagedRawData.Items
+                .Select(x => MapToResponse(x.Product, x.Detail))
+                .ToList();
 
-            // 3. Xử lý điều kiện nếu nhập số trang vượt quá tổng số trang hiện có
-            int totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-
-            // Nếu có dữ liệu mà người dùng yêu cầu trang lớn hơn tổng số trang
-            if (totalPages > 0 && pageNumber > totalPages)
-            {
-                pageNumber = totalPages; // Đưa người dùng về trang cuối cùng
-            }
-
-            // 4. Phân trang an toàn
-            var products = await query
-                .OrderBy(p => p.IdSP)
-                .Skip((pageNumber - 1) * pageSize) // Đảm bảo biểu thức này không bao giờ âm
-                .Take(pageSize)
-                .ToListAsync();
-
-            // 5. Map sang DTO
-            var dtos = products.Select(p => MapToResponse(p)).ToList();
-
-            // 6. Trả về đối tượng PagedResult (Dùng pageNumber và pageSize đã xử lý)
-            return new PagedResult<ProductResponseDto>(dtos, totalCount, pageNumber, pageSize);
+            // 4. Trả về kết quả PagedResult mới chứa danh sách DTO
+            return new PagedResult<ProductResponseDto>(
+                dtos,
+                pagedRawData.TotalCount,
+                pagedRawData.PageNumber,
+                pagedRawData.PageSize
+            );
         }
-
         public async Task<ProductResponseDto?> GetByIdAsync(int id)
         {
             // Tìm sản phẩm kèm theo bản ghi chi tiết của nó
@@ -70,7 +65,7 @@ namespace QuanLyBanHangOnline.Services.Implementations
             try
             {
                 // 1. Xử lý ảnh
-                string fileName = await SaveImage(dto.ImageFile);
+                string fileName = await ImgHelper.SaveImageAsync(dto.ImageFile, _environment.WebRootPath, "products");
 
                 // 2. Lưu vào bảng Product trước
                 var product = new Product
@@ -126,8 +121,8 @@ namespace QuanLyBanHangOnline.Services.Implementations
 
                 if (dto.ImageFile != null)
                 {
-                    DeleteOldImage(product.Image);
-                    product.Image = await SaveImage(dto.ImageFile);
+                    ImgHelper.DeleteImage(_environment.WebRootPath, "products", product.Image);
+                    product.Image = await ImgHelper.SaveImageAsync(dto.ImageFile, _environment.WebRootPath, "products");
                 }
 
                 // Cập nhật bảng ProductDetail (Nếu chưa có thì tạo mới, có rồi thì sửa)
@@ -156,52 +151,11 @@ namespace QuanLyBanHangOnline.Services.Implementations
             var product = await _context.Product.FindAsync(id);
             if (product == null) return false;
 
-            DeleteOldImage(product.Image);
+            // Dùng ImgHelper để xóa cũ và lưu mới
+            ImgHelper.DeleteImage(_environment.WebRootPath, "products", product.Image);
             _context.Product.Remove(product);
             await _context.SaveChangesAsync();
             return true;
-        }
-
-        // --- Helper Methods ---
-        private async Task<string> SaveImage(IFormFile? file)
-        {
-            if (file == null) return "default.jpg";
-
-            string wwwRootPath = _environment.WebRootPath;
-
-            // Lấy tên file gốc nhưng KHÔNG lấy đuôi (ví dụ: "tt.jpg" -> "tt")
-            string fileNameOnly = Path.GetFileNameWithoutExtension(file.FileName);
-
-            // 1. Làm sạch tên file (xóa khoảng trắng, ký tự đặc biệt)
-            string safeFileName = GenerateSlug(fileNameOnly);
-
-            // 2. Tạo tên file mới: "tt-20260117132559.jpg"
-            string extension = Path.GetExtension(file.FileName);
-            string fileName = $"{safeFileName}-{DateTime.Now:yyyyMMddHHmmss}{extension}";
-
-            string path = Path.Combine(wwwRootPath, "images/products", fileName);
-
-            using (var fileStream = new FileStream(path, FileMode.Create))
-            {
-                await file.CopyToAsync(fileStream);
-            }
-            return fileName;
-        }
-
-        // Hàm hỗ trợ xóa dấu và ký tự đặc biệt
-        private string GenerateSlug(string phrase)
-        {
-            string str = phrase.ToLower();
-            // Logic đơn giản: thay khoảng trắng bằng dấu gạch ngang
-            str = System.Text.RegularExpressions.Regex.Replace(str, @"\s+", "-");
-            return str;
-        }
-
-        private void DeleteOldImage(string fileName)
-        {
-            if (fileName == "default.jpg") return;
-            string path = Path.Combine(_environment.WebRootPath, "images/products", fileName);
-            if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
         }
 
         private ProductResponseDto MapToResponse(Product p, ProductDetail? d = null)
@@ -221,7 +175,7 @@ namespace QuanLyBanHangOnline.Services.Implementations
                 Size = d?.Size ?? "",
                 Color = d?.Color ?? "",
                 Description = d?.Description ?? "",
-                StartTB = d?.StartTB ?? 5
+                StartTB = d?.StartTB ?? 0
             };
         }
 

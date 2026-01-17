@@ -2,6 +2,8 @@
 using QuanLyBanHangOnline.DTO.Staffs;
 using QuanLyBanHangOnline.Services.Interfaces;
 using quanlybanhangonline.Models;
+using QuanLyBanHangOnline.DTO.Generic;
+using QuanLyBanHangOnline.Helpers;
 
 namespace QuanLyBanHangOnline.Services.Implementations
 {
@@ -15,9 +17,10 @@ namespace QuanLyBanHangOnline.Services.Implementations
         }
 
         // Lấy toàn bộ danh sách nhân viên và chuyển sang DTO
-        public async Task<IEnumerable<StaffDto>> GetAllAsync()
+        public async Task<PagedResult<StaffDto>> GetAllAsync(PaginationParams @params)
         {
-            return await _context.Staff
+            var query = _context.Staff
+                .OrderBy(s => s.IdStaff)
                 .Select(s => new StaffDto
                 {
                     IdStaff = s.IdStaff,
@@ -26,7 +29,10 @@ namespace QuanLyBanHangOnline.Services.Implementations
                     Phone = s.Phone,
                     Address = s.Address,
                     Salary = s.Salary
-                }).ToListAsync();
+                }) ;
+
+            // 5. Trả về PagedResult dùng chung cho toàn bộ dự án
+            return await query.ToPagedResultAsync(@params.PageNumber, @params.PageSize);
         }
 
         // Lấy thông tin chi tiết một nhân viên theo ID
@@ -49,6 +55,14 @@ namespace QuanLyBanHangOnline.Services.Implementations
         // Tạo mới nhân viên và mã hóa mật khẩu
         public async Task CreateAsync(CreatStaffDto dto)
         {
+            // 1. Kiểm tra xem Email đã tồn tại trong hệ thống chưa
+            var emailExists = await _context.Staff.AnyAsync(s => s.Email == dto.Email);
+            if (emailExists)
+            {
+                //  Custom Exception hoặc ném Exception thông thường
+                throw new Exception("Email này đã được sử dụng bởi một nhân viên khác.");
+            }
+            // 2. Nếu chưa tồn tại, tiến hành tạo mới
             var staff = new Staff
             {
                 Email = dto.Email,

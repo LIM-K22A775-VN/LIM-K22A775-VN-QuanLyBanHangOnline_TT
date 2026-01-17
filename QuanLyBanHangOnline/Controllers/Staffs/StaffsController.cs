@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QuanLyBanHangOnline.DTO.Generic;
 using QuanLyBanHangOnline.DTO.Staffs;
 using QuanLyBanHangOnline.Services.Interfaces;
 using System.Security.Claims;
@@ -22,9 +23,9 @@ namespace QuanLyBanHangOnline.Controllers.Staffs
         // GET: api/Staffs
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<IEnumerable<StaffDto>>> GetStaff()
+        public async Task<ActionResult<PagedResult<StaffDto>>> GetStaff([FromQuery] PaginationParams @params)
         {
-            var staffs = await _staffService.GetAllAsync();
+            var staffs = await _staffService.GetAllAsync(@params);
             return Ok(staffs);
         }
 
@@ -71,8 +72,14 @@ namespace QuanLyBanHangOnline.Controllers.Staffs
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PostStaff(CreatStaffDto dto)
         {
-            await _staffService.CreateAsync(dto);
-            return Ok(new { message = "Nhân viên đã được tạo thành công" });
+            try
+            {
+                await _staffService.CreateAsync(dto);
+                return Ok(new { message = "Nhân viên đã được tạo thành công" });
+            }
+            catch (Exception ex) {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         // DELETE: api/Staffs/5

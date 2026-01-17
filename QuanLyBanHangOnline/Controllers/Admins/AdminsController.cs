@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using QuanLyBanHangOnline.Services.Interfaces;
 using quanlybanhangonline.Models;
+using QuanLyBanHangOnline.DTO.Generic;
 
 namespace QuanLyBanHangOnline.Controllers.Admins
 {
@@ -18,9 +19,9 @@ namespace QuanLyBanHangOnline.Controllers.Admins
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Admin>>> GetAdmin()
+        public async Task<ActionResult<PagedResult<Admin>>> GetAdmin([FromQuery] PaginationParams @params)
         {
-            var admins = await _adminService.GetAllAsync();
+            var admins = await _adminService.GetAllAsync(@params);
             return Ok(admins);
         }
 
@@ -43,8 +44,14 @@ namespace QuanLyBanHangOnline.Controllers.Admins
         [HttpPost]
         public async Task<ActionResult<Admin>> PostAdmin(Admin admin)
         {
-            await _adminService.CreateAsync(admin);
-            return CreatedAtAction("GetAdmin", new { id = admin.IdAdmin }, admin);
+            try
+            {
+                await _adminService.CreateAsync(admin);
+                return CreatedAtAction("GetAdmin", new { id = admin.IdAdmin }, admin);
+            }
+            catch (Exception ex) {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]
