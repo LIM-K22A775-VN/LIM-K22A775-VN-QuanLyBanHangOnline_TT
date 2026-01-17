@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using BCrypt.Net;
 using QuanLyBanHangOnline.DTO.Users;
 using System.Security.Claims;
+using QuanLyBanHangOnline.Services.Interfaces;
 
 namespace QuanLyBanHangOnline.Controllers
 {
@@ -18,11 +19,11 @@ namespace QuanLyBanHangOnline.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IUserService _userService;
 
-        public UsersController(ApplicationDbContext context)
+        public UsersController(IUserService userService)
         {
-            _context = context;
+            _userService = userService;
         }
 
         // GET: api/Users
@@ -30,104 +31,36 @@ namespace QuanLyBanHangOnline.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetUser()
         {
-          if (_context.User == null)
-          {
-              return NotFound();
-          }
-            return await _context.User
-        .Select(u => new UserDto
-        {
-            IdUser = u.IdUser,
-            Email = u.Email,
-            FullName = u.FullName,
-            Phone = u.Phone,
-            Address = u.Address
-        })
-        .ToListAsync();
+            var users = await _userService.GetAllAsync();
+            return Ok(users);
         }
 
         // GET: api/Users/5
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDto>> GetUser(int id)
         {
-
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
-            // Chặn nếu không phải Admin và cũng không phải chính chủ
-            if (currentUserRole == "User" && currentUserId != id.ToString())
-            {
-                return Forbid();
-            }
-
-            if (_context.User == null)
-          {
-              return NotFound();
-          }
-            var user = await _context.User.FindAsync(id);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-             return new UserDto
-    {
-        IdUser = user.IdUser,
-        Email = user.Email,
-        FullName = user.FullName,
-        Phone = user.Phone,
-        Address = user.Address
-    };
+            if (!IsOwnerOrAdmin(id)) return Forbid();
+            var user = await _userService.GetByIdAsync(id);
+            if (user == null) return NotFound();
+            return Ok(user);
         }
 
         // PUT: api/Users/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, UpdateUserDto dto)
         {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
-
-            // Chỉ chính chủ hoặc Admin mới được sửa
-            if (currentUserRole == "User" && currentUserId != id.ToString())
-            {
-                return Forbid();
-            }
-
-            var user = await _context.User.FindAsync(id);
-            if (user == null) return NotFound();
-
-            user.FullName = dto.FullName ?? user.FullName;
-            user.Phone = dto.Phone ?? user.Phone;
-            user.Address = dto.Address ?? user.Address;
-
-            if (!string.IsNullOrEmpty(dto.Password))
-            {
-                user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-            }
-
-            await _context.SaveChangesAsync();
+            if (!IsOwnerOrAdmin(id)) return Forbid();
+            var result = await _userService.UpdateAsync(id, dto);
+            if (!result) return NotFound();
             return NoContent();
         }
 
         // POST: api/Users
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> PostUser(CreateUserDto dto)
         {
-            var user = new User
-            {
-                Email = dto.Email,
-                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                FullName = dto.FullName ?? "",
-                Phone = dto.Phone ?? "",
-                Address = dto.Address ?? ""
-            };
-
-            _context.User.Add(user);
-            await _context.SaveChangesAsync();
-
+            await _userService.CreateAsync(dto);
             return Ok();
         }
 
@@ -137,25 +70,16 @@ namespace QuanLyBanHangOnline.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            if (_context.User == null)
-            {
-                return NotFound();
-            }
-            var user = await _context.User.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            _context.User.Remove(user);
-            await _context.SaveChangesAsync();
-
+            var result = await _userService.DeleteAsync(id);
+            if (!result) return NotFound();
             return NoContent();
         }
-
-        private bool UserExists(int id)
+        // Hàm phụ kiểm tra quyền chính chủ
+        private bool IsOwnerOrAdmin(int id)
         {
-            return (_context.User?.Any(e => e.IdUser == id)).GetValueOrDefault();
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
+            return currentUserRole == "Admin" || currentUserId == id.ToString();
         }
     }
 }

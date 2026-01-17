@@ -1,4 +1,4 @@
-﻿namespace QuanLyBanHangOnline.DTO.Users
+﻿namespace QuanLyBanHangOnline.DTO.Staffs
 {
     public class UpdateStaffDto
     {

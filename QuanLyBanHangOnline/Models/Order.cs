@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using QuanLyBanHangOnline.Constants;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 namespace quanlybanhangonline.Models
@@ -17,7 +18,7 @@ namespace quanlybanhangonline.Models
         public DateTime OrderDate { get; set; } = DateTime.Now; // Gán mặc định thời gian hiện tại
         public decimal TotalPrice { get; set; }
 
-        public OrderStatus Status { get; set; } = OrderStatus.ChoXacNhan; // Mặc định là chờ xác nhận
+        public Enums.OrderStatus Status { get; set; } = Enums.OrderStatus.ChoXacNhan; // Mặc định là chờ xác nhận
 
         [ForeignKey("IdUser")]
         [JsonIgnore] // Dòng này sẽ làm cho "user" biến mất khỏi JSON yêu cầu
@@ -28,11 +29,3 @@ namespace quanlybanhangonline.Models
 }
 
 
-public enum OrderStatus
-{
-    ChoXacNhan = 0,    // Chờ xác nhận
-    DaXacNhan = 1,     // Đã xác nhận
-    DaVanChuyen = 2,   // Đã vận chuyển
-    DaNhanHang = 3,    // Đã nhận hàng
-    DaHuy = 4          // (Nên thêm trạng thái Hủy đơn)
-}

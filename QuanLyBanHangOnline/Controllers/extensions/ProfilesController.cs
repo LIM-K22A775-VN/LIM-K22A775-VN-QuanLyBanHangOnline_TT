@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using quanlybanhangonline.Models;
-using QuanLyBanHangOnline.DTO.Users;
+using QuanLyBanHangOnline.DTO.Staffs;
+
 
 namespace QuanLyBanHangOnline.Controllers.extensions
 {

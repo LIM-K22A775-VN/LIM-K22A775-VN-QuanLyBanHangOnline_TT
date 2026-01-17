@@ -6,41 +6,32 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using System.IdentityModel.Tokens.Jwt;
+using QuanLyBanHangOnline.Infrastructure.Jwt;
+using QuanLyBanHangOnline.Services.Interfaces;
+using QuanLyBanHangOnline.Services.Implementations;
 
 
 
 var builder = WebApplication.CreateBuilder(args);
 
+// --- DỊCH VỤ HỆ THỐNG ---
+
+// Đăng ký AdminService
+builder.Services.AddScoped<IAdminService, AdminService>();
+// Đăng ký UserService
+builder.Services.AddScoped<IUserService, UserService>();
+// Đăng ký OrderService
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 //Cấu hình Authentication  , JWT 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
+builder.Services.AddSystemAuthenticationJwt(builder.Configuration);
 
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
-        ),
-        ClockSkew = TimeSpan.Zero
-    };
-});
+//.2 Cấu hình Database
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("QuanLyBanHangOnlineContext") ?? throw new InvalidOperationException("Connection string 'reviewContext' not found.")));
 
-
-
-
-
-// Thêm dịch vụ CORS vào container
+// 3. Cấu hình CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular",
@@ -52,20 +43,13 @@ builder.Services.AddCors(options =>
         });
 });
 
-
-
-
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("QuanLyBanHangOnlineContext") ?? throw new InvalidOperationException("Connection string 'reviewContext' not found.")));
-
 // Add services to the container.
-
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
-//builder.Services.AddSwaggerGen();
+// 4. Cấu hình Swagger
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -103,7 +87,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- PIPELINE XỬ LÝ ---
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
