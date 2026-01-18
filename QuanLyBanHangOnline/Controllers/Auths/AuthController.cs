@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Text;
 using QuanLyBanHangOnline.DTO.Auth;
 using QuanLyBanHangOnline.Infrastructure.Jwt;
+using quanlybanhangonline.Models;
 
 namespace QuanLyBanHangOnline.Controllers.Auths
 {
@@ -36,10 +37,13 @@ namespace QuanLyBanHangOnline.Controllers.Auths
             }
 
             // 2. Kiểm tra Staff
-            var staff = await _context.Staff.FirstOrDefaultAsync(x => x.Email == dto.Email);
+            var staff = await _context.Staff
+                .Include(x => x.Role)
+                .FirstOrDefaultAsync(x => x.Email == dto.Email);
             if (staff != null && BCrypt.Net.BCrypt.Verify(dto.Password, staff.Password))
             {
-                return await SignInResponse(staff.IdStaff, staff.Email, "Staff", staff);
+                // Truyền thêm Permissions từ bảng Role vào hàm SignInResponse
+                return await SignInResponse(staff.IdStaff, staff.Email, "Staff", staff, staff.Role?.Permissions);
             }
 
             // 3. Kiểm tra User
@@ -112,14 +116,23 @@ namespace QuanLyBanHangOnline.Controllers.Auths
             if (dbRefreshToken != model.RefreshToken || dbExpiry <= DateTime.UtcNow)
                 return BadRequest("Invalid or expired refresh token");
 
+
+            string? permissions = null;
+            if (role == "Staff" && entity is Staff staffEntity)
+            {
+                // Nếu entity chưa load Role, ta chỉ cần load tường minh (Explicit Loading)
+                // hoặc nạp sẵn từ bước 2 bằng cách thêm .Include() vào query entity
+                await _context.Entry(staffEntity).Reference(s => s.Role).LoadAsync();
+                permissions = staffEntity.Role?.Permissions;
+            }
             // 4. Cấp cặp token mới
-            return await SignInResponse(int.Parse(idClaim), email, role, entity);
+            return await SignInResponse(int.Parse(idClaim), email, role, entity, permissions);
         }
 
         // Hàm phụ để xử lý lưu Token vào DB và trả về kết quả
-        private async Task<IActionResult> SignInResponse(int id, string email, string role, object entity)
+        private async Task<IActionResult> SignInResponse(int id, string email, string role, object entity,string? permissionsJson = null)
         {
-            var accessToken = _jwtUtils.GenerateJwtToken(id, email, role);
+            var accessToken = _jwtUtils.GenerateJwtToken(id, email, role, permissionsJson);
             var refreshToken = _jwtUtils.GenerateRefreshToken();
 
             var type = entity.GetType();

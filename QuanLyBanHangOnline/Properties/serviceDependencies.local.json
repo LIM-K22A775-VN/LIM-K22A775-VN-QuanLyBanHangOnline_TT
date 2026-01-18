@@ -31,6 +31,10 @@
     "mssql8": {
       "type": "mssql.local",
       "connectionId": "ConnectionStrings:reviewContext"
+    },
+    "mssql9": {
+      "type": "mssql.local",
+      "connectionId": "ConnectionStrings:RoleContext"
     }
   }
 }

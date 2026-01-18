@@ -10,11 +10,12 @@ using System.IdentityModel.Tokens.Jwt;
 using QuanLyBanHangOnline.Infrastructure.Jwt;
 using QuanLyBanHangOnline.Services.Interfaces;
 using QuanLyBanHangOnline.Services.Implementations;
+using System.Reflection;
+
 
 
 
 var builder = WebApplication.CreateBuilder(args);
-
 // --- DỊCH VỤ HỆ THỐNG ---
 
 // Đăng ký AdminService
@@ -89,6 +90,12 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     });
+
+
+    // Thêm ghi chú XML để Swagger đọc được các mô tả (Summary)
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
 });
 
 

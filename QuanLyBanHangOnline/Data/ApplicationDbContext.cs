@@ -19,7 +19,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<OrderDetail> OrderDetail { get; set; }
     public DbSet<Review> Review { get; set; }
 
-
+    public DbSet<QuanLyBanHangOnline.Models.Role> Role { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Order>()

@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using QuanLyBanHangOnline.Models;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace quanlybanhangonline.Models
 {
@@ -21,5 +23,11 @@ namespace quanlybanhangonline.Models
         // refresh token
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }
+
+
+        // Liên kết tới bảng Role (Có thể null nếu là Admin)
+        public int? RoleId { get; set; }
+        [ForeignKey("RoleId")]
+        public virtual Role? Role { get; set; }
     }
 }
