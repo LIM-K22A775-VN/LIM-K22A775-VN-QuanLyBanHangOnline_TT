@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Humanizer;
+using Microsoft.EntityFrameworkCore;
 using quanlybanhangonline.Models;
 
 public class ApplicationDbContext : DbContext
@@ -30,5 +31,13 @@ public class ApplicationDbContext : DbContext
         .HasOne<Product>()
         .WithOne()
         .HasForeignKey<ProductDetail>(pd => pd.IdSP);
+
+        // --- SEED DATA: Tạo tài khoản Admin mặc định ---
+        modelBuilder.Entity<Admin>().HasData(new Admin
+        {
+            IdAdmin = 1,
+            Email = "admin99@gmail.com",       
+            Password = BCrypt.Net.BCrypt.HashPassword("123456"), 
+        });
     }
 }

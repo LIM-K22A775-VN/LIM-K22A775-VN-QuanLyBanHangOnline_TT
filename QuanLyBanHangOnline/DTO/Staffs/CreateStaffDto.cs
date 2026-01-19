@@ -15,4 +15,7 @@ public class CreatStaffDto
     public string? Phone { get; set; }
     public string? Address { get; set; }
     public decimal? Salary { get; set; } // luong
+
+    // Bổ sung: Gán nhóm quyền khi tạo
+    public int? RoleId { get; set; }
 }

@@ -9,6 +9,7 @@ using System.Text;
 using QuanLyBanHangOnline.DTO.Auth;
 using QuanLyBanHangOnline.Infrastructure.Jwt;
 using quanlybanhangonline.Models;
+using QuanLyBanHangOnline.Models;
 
 namespace QuanLyBanHangOnline.Controllers.Auths
 {
@@ -33,7 +34,8 @@ namespace QuanLyBanHangOnline.Controllers.Auths
             var admin = await _context.Admin.FirstOrDefaultAsync(x => x.Email == dto.Email);
             if (admin != null && BCrypt.Net.BCrypt.Verify(dto.Password, admin.Password))
             {
-                return await SignInResponse(admin.IdAdmin, admin.Email, "Admin", admin);
+                // Admin không có RoleId trong bảng, truyền 0 hoặc một ID xác định
+                return await SignInResponse(admin.IdAdmin, admin.Email, "Admin", admin, 0);
             }
 
             // 2. Kiểm tra Staff
@@ -42,15 +44,14 @@ namespace QuanLyBanHangOnline.Controllers.Auths
                 .FirstOrDefaultAsync(x => x.Email == dto.Email);
             if (staff != null && BCrypt.Net.BCrypt.Verify(dto.Password, staff.Password))
             {
-                // Truyền thêm Permissions từ bảng Role vào hàm SignInResponse
-                return await SignInResponse(staff.IdStaff, staff.Email, "Staff", staff, staff.Role?.Permissions);
+                return await SignInResponse(staff.IdStaff, staff.Email, "Staff", staff, staff.RoleId ?? 0);
             }
 
             // 3. Kiểm tra User
             var user = await _context.User.FirstOrDefaultAsync(x => x.Email == dto.Email);
             if (user != null && BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
             {
-                return await SignInResponse(user.IdUser, user.Email, "User", user);
+                return await SignInResponse(user.IdUser, user.Email, "User", user, 0);
             }
 
             return Unauthorized("Sai email hoặc mật khẩu");
@@ -104,7 +105,7 @@ namespace QuanLyBanHangOnline.Controllers.Auths
             // 2. Tìm User trong DB dựa trên Role
             object entity = null;
             if (role == "Admin") entity = await _context.Admin.FirstOrDefaultAsync(u => u.Email == email);
-            else if (role == "Staff") entity = await _context.Staff.FirstOrDefaultAsync(u => u.Email == email);
+            else if (role == "Staff") entity = await _context.Staff.Include(s => s.Role).FirstOrDefaultAsync(u => u.Email == email);
             else entity = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
 
             if (entity == null) return BadRequest("User not found");
@@ -117,22 +118,19 @@ namespace QuanLyBanHangOnline.Controllers.Auths
                 return BadRequest("Invalid or expired refresh token");
 
 
-            string? permissions = null;
+            int roleId = 0;
             if (role == "Staff" && entity is Staff staffEntity)
             {
-                // Nếu entity chưa load Role, ta chỉ cần load tường minh (Explicit Loading)
-                // hoặc nạp sẵn từ bước 2 bằng cách thêm .Include() vào query entity
-                await _context.Entry(staffEntity).Reference(s => s.Role).LoadAsync();
-                permissions = staffEntity.Role?.Permissions;
+                roleId = staffEntity.RoleId ?? 0;
             }
             // 4. Cấp cặp token mới
-            return await SignInResponse(int.Parse(idClaim), email, role, entity, permissions);
+            return await SignInResponse(int.Parse(idClaim), email, role, entity, roleId);
         }
 
         // Hàm phụ để xử lý lưu Token vào DB và trả về kết quả
-        private async Task<IActionResult> SignInResponse(int id, string email, string role, object entity,string? permissionsJson = null)
+        private async Task<IActionResult> SignInResponse(int id, string email, string role, object entity,int roleId)
         {
-            var accessToken = _jwtUtils.GenerateJwtToken(id, email, role, permissionsJson);
+            var accessToken = _jwtUtils.GenerateJwtToken(id, email, role, roleId);
             var refreshToken = _jwtUtils.GenerateRefreshToken();
 
             var type = entity.GetType();

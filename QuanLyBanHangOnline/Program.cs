@@ -31,6 +31,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+builder.Services.AddScoped<IAppAuthorizationService, AppAuthorizationService>();
 
 //Cấu hình Authentication  , JWT 
 builder.Services.AddSystemAuthenticationJwt(builder.Configuration);

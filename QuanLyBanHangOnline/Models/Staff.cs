@@ -9,6 +9,8 @@ namespace quanlybanhangonline.Models
         [Key] // staff id
         public int IdStaff { get; set; }
 
+        [EmailAddress] // Thêm validation cho Email
+        [StringLength(255)]
         [Required]
         public string Email  { get; set; } // tk
 

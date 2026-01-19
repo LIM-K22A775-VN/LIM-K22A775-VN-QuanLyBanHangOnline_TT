@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using QuanLyBanHangOnline.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -13,7 +14,7 @@ namespace QuanLyBanHangOnline.Infrastructure.Jwt
             _configuration = configuration; //"Toàn cục"
         }
         //Logic tạo Access Token.
-        public string GenerateJwtToken(int id, string email, string role, string permissionsJson = null)
+        public string GenerateJwtToken(int id, string email, string role, int roleId)
         {
             // 1. Chuyển sang dùng List<Claim>
             var claims = new List<Claim>
@@ -21,14 +22,9 @@ namespace QuanLyBanHangOnline.Infrastructure.Jwt
                 new Claim(ClaimTypes.NameIdentifier, id.ToString()),
                 new Claim(ClaimTypes.Email, email),
                 new Claim(ClaimTypes.Role, role),
+                new Claim("RoleId", roleId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
-
-            // 2. Bây giờ hàm .Add() sẽ hoạt động bình thường
-            if (role == "Staff" && !string.IsNullOrEmpty(permissionsJson))
-            {
-                claims.Add(new Claim("Permissions", permissionsJson));
-            }
             //chìa khóa bí mật (Secret Key)
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])

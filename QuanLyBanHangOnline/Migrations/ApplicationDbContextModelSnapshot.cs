@@ -46,6 +46,14 @@ namespace QuanLyBanHangOnline.Migrations
                     b.HasKey("IdAdmin");
 
                     b.ToTable("Admin");
+
+                    b.HasData(
+                        new
+                        {
+                            IdAdmin = 10,
+                            Email = "admin99@gmail.com",
+                            Password = "$2a$11$GTnD.LCRR9LXqAtS.Pjf/.PaH37aWzzFOZqJrNzH6kFavP3bFuUlm"
+                        });
                 });
 
             modelBuilder.Entity("quanlybanhangonline.Models.Order", b =>

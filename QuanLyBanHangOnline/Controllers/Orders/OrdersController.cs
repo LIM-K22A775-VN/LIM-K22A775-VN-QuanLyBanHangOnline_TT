@@ -7,23 +7,24 @@ using quanlybanhangonline.Models;
 using QuanLyBanHangOnline.Services.Interfaces;
 using System.Security.Claims;
 using QuanLyBanHangOnline.DTO.Generic;
+using QuanLyBanHangOnline.Controllers;
 
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
-public class OrdersController : ControllerBase
+public class OrdersController : BaseController
 {
     private readonly IOrderService _orderService;
 
-    public OrdersController(IOrderService orderService)
+    public OrdersController(IOrderService orderService, IAppAuthorizationService authService) : base(authService)
     {
         _orderService = orderService;
     }
 
-    [Authorize(Roles = "Staff,Admin")]
     [HttpGet]
     public async Task<ActionResult<PagedResult<OrderResponseDto>>> GetOrder([FromQuery] PaginationParams @params)
     {
+        if (!await HasPermission("order_view")) return Forbid();
         return Ok(await _orderService.GetAllOrdersAsync(@params));
     }
 
@@ -32,6 +33,11 @@ public class OrdersController : ControllerBase
     {
         var order = await _orderService.GetOrderByIdAsync(id);
         if (order == null) return NotFound();
+        // Logic: Admin/Staff có quyền 'order_view' HOẶC Khách hàng là chủ đơn hàng
+        bool isOwner = order.IdUser == int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        bool hasViewPermission = await HasPermission("order_view");
+
+        if (!isOwner && !hasViewPermission) return Forbid();
         return Ok(order);
     }
 
@@ -66,6 +72,13 @@ public class OrdersController : ControllerBase
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         var role = User.FindFirstValue(ClaimTypes.Role);
 
+        // Kiểm tra quyền: Nhân viên cần 'order_edit' để đổi trạng thái
+        // Lưu ý: User (Khách) có thể hủy đơn nếu Service cho phép (chưa giao hàng)
+        if (role != "User" && !await HasPermission("order_edit"))
+        {
+            return Forbid();
+        }
+
         // Truyền thêm userId và role vào Service để kiểm tra chính chủ
         var result = await _orderService.UpdateStatusAsync(id, newStatus, userId, role);
 
@@ -75,8 +88,13 @@ public class OrdersController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteOrder(int id)
     {
+
+        // Chỉ Admin hoặc Staff có quyền 'order_delete' mới được xóa đơn (thường rất hạn chế)
+        if (!await HasPermission("order_delete")) return Forbid();
+
         int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         string role = User.FindFirstValue(ClaimTypes.Role);
+
 
         var result = await _orderService.DeleteOrderAsync(id, userId, role);
         if (!result) return Forbid();
@@ -96,8 +114,8 @@ public class OrdersController : ControllerBase
         var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
 
-        // BẢO MẬT: Chỉ cho xem nếu là Admin/Staff HOẶC chính chủ đơn hàng đó
-        if (currentUserRole != "Admin" && currentUserRole != "Staff" && order.IdUser != currentUserId)
+        // Check quyền xem chi tiết tương tự xem đơn hàng
+        if (order.IdUser != currentUserId && !await HasPermission("order_view"))
         {
             return Forbid();
         }
@@ -107,9 +125,9 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPut("details/{detailId}")]
-    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> UpdateDetail(int detailId, OrderDetail detail)
     {
+        if (!await HasPermission("order_edit")) return Forbid();
         var result = await _orderService.UpdateOrderDetailAsync(detailId, detail);
         if (!result) return BadRequest("Không thể cập nhật chi tiết đơn hàng.");
         return NoContent();

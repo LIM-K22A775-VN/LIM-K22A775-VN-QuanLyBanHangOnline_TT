@@ -9,5 +9,8 @@
         // optional: đổi mật khẩu
         public string? Password { get; set; }
         public decimal? Salary { get; set; } // luong
+
+        // Bổ sung: Cho phép thay đổi nhóm quyền
+        public int? RoleId { get; set; }
     }
 }

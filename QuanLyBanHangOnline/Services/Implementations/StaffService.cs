@@ -20,6 +20,7 @@ namespace QuanLyBanHangOnline.Services.Implementations
         public async Task<PagedResult<StaffDto>> GetAllAsync(PaginationParams @params)
         {
             var query = _context.Staff
+                .Include(s => s.Role)
                 .OrderBy(s => s.IdStaff)
                 .Select(s => new StaffDto
                 {
@@ -28,7 +29,9 @@ namespace QuanLyBanHangOnline.Services.Implementations
                     Email = s.Email,
                     Phone = s.Phone,
                     Address = s.Address,
-                    Salary = s.Salary
+                    Salary = s.Salary,
+                    RoleId = s.RoleId,
+                    RoleName = s.Role != null ? s.Role.Title : "Chưa gán quyền" // Hiển thị tên quyền
                 }) ;
 
             // 5. Trả về PagedResult dùng chung cho toàn bộ dự án
@@ -48,7 +51,9 @@ namespace QuanLyBanHangOnline.Services.Implementations
                 Email = staff.Email,
                 Phone = staff.Phone,
                 Address = staff.Address,
-                Salary = staff.Salary
+                Salary = staff.Salary,
+                RoleId = staff.RoleId,
+                RoleName = staff.Role?.Title ?? "Chưa gán quyền"
             };
         }
 
@@ -70,7 +75,8 @@ namespace QuanLyBanHangOnline.Services.Implementations
                 FullName = dto.FullName ?? "Chưa cập nhật",
                 Phone = dto.Phone ?? "Chưa cập nhật",
                 Address = dto.Address ?? "Chưa cập nhật",
-                Salary = dto.Salary ?? 0
+                Salary = dto.Salary ?? 0,
+                RoleId = dto.RoleId
             };
 
             _context.Staff.Add(staff);
@@ -87,6 +93,11 @@ namespace QuanLyBanHangOnline.Services.Implementations
             staff.Phone = dto.Phone ?? staff.Phone;
             staff.Address = dto.Address ?? staff.Address;
             staff.Salary = dto.Salary ?? staff.Salary;
+
+            if (dto.RoleId.HasValue)
+            {
+                staff.RoleId = dto.RoleId.Value;
+            }
 
             // Nếu người dùng có nhập mật khẩu mới thì mới hash lại
             if (!string.IsNullOrEmpty(dto.Password))

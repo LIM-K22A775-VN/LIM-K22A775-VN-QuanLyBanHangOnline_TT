@@ -9,6 +9,8 @@
         public string? Address { get; set; }
         public decimal? Salary { get; set; } // luong
 
-
+        // Bổ sung thông tin Role
+        public int? RoleId { get; set; }
+        public string? RoleName { get; set; } // Hiển thị "Quản trị viên", "Nhân viên"...
     }
 }

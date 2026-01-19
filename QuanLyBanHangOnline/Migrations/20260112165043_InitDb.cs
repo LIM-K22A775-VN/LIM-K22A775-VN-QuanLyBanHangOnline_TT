@@ -22,7 +22,12 @@ namespace QuanLyBanHangOnline.Migrations
                 {
                     table.PrimaryKey("PK_Admin", x => x.IdAdmin);
                 });
-
+            // Chèn dữ liệu Admin ngay sau khi tạo bảng Admin
+            //migrationBuilder.InsertData(
+            //    table: "Admin",
+            //    columns: new[] { "IdAdmin", "Email", "Password" },
+            //    values: new object[] { 1, "admin99@gmail.com", "123456" }
+            //);
             migrationBuilder.CreateTable(
                 name: "Product",
                 columns: table => new

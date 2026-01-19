@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using QuanLyBanHangOnline.DTO.Generic;
 using QuanLyBanHangOnline.DTO.Staffs;
+using QuanLyBanHangOnline.Helpers;
 using QuanLyBanHangOnline.Services.Interfaces;
 using System.Security.Claims;
 
@@ -10,21 +11,27 @@ namespace QuanLyBanHangOnline.Controllers.Staffs
     [Authorize(Roles = "Staff,Admin")]
     [Route("api/[controller]")]
     [ApiController]
-    public class StaffsController : ControllerBase
+    // Kế thừa BaseController để dùng HasPermission check DB trực tiếp
+    public class StaffsController : BaseController
     {
         private readonly IStaffService _staffService;
 
         // Inject IStaffService vào constructor
-        public StaffsController(IStaffService staffService)
+        public StaffsController(IStaffService staffService, IAppAuthorizationService authService) : base(authService)
         {
             _staffService = staffService;
         }
 
         // GET: api/Staffs
         [HttpGet]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<PagedResult<StaffDto>>> GetStaff([FromQuery] PaginationParams @params)
         {
+            // Kiểm tra: Admin được vào, hoặc Staff có quyền "staff_view"
+            if (!await HasPermission("staff_view"))
+            {
+                return Forbid();
+            }
+
             var staffs = await _staffService.GetAllAsync(@params);
             return Ok(staffs);
         }
@@ -52,11 +59,26 @@ namespace QuanLyBanHangOnline.Controllers.Staffs
         [HttpPut("{id}")]
         public async Task<IActionResult> PutStaff(int id, UpdateStaffDto staffdto)
         {
-            // Kiểm tra quyền: Chỉ Admin hoặc chính Staff đó mới được sửa
-            if (!IsOwnerOrAdmin(id))
+            // Logic: 
+            // 1. Nếu là Admin hoặc chính chủ -> Cho phép sửa (thông tin cá nhân)
+            // 2. Nếu là Staff khác -> Phải có quyền "staff_edit" mới được sửa người khác
+            bool isOwnerOrAdmin = IsOwnerOrAdmin(id);
+            bool hasEditPermission = await HasPermission("staff_edit");
+
+            if (!isOwnerOrAdmin && !hasEditPermission)
             {
                 return Forbid();
             }
+
+            // Bảo mật bổ sung: Chỉ Admin mới được phép thay đổi RoleId của người khác
+            var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
+            if (currentUserRole != "Admin")
+            {
+                staffdto.RoleId = null; // Chặn nhân viên tự nâng quyền hoặc đổi quyền người khác
+                staffdto.Salary = null; // Không được tự tăng lương
+            }
+            // Nếu staffdto.Salary có giá trị, nó sẽ lấy giá trị đó.
+            // Nếu staffdto.Salary là null, nó sẽ giữ nguyên giá trị cũ (staff.Salary) đang có trong DB.
 
             var result = await _staffService.UpdateAsync(id, staffdto);
             if (!result)
@@ -69,9 +91,14 @@ namespace QuanLyBanHangOnline.Controllers.Staffs
 
         // POST: api/Staffs
         [HttpPost]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PostStaff(CreatStaffDto dto)
         {
+            // Dùng mã quyền "staff_create" để kiểm tra từ Ma trận
+            if (!await HasPermission("staff_post"))
+            {
+                return Forbid();
+            }
+
             try
             {
                 await _staffService.CreateAsync(dto);
@@ -84,9 +111,14 @@ namespace QuanLyBanHangOnline.Controllers.Staffs
 
         // DELETE: api/Staffs/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteStaff(int id)
         {
+            // Chỉ Admin hoặc người có quyền xóa nhân viên mới được thực hiện
+            if (!await HasPermission("staff_delete"))
+            {
+                return Forbid();
+            }
+
             var result = await _staffService.DeleteAsync(id);
             if (!result)
             {
@@ -104,7 +136,11 @@ namespace QuanLyBanHangOnline.Controllers.Staffs
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
 
-            return currentUserRole == "Admin" || currentUserId == id.ToString();
+            // Nếu là Admin thì luôn có quyền
+            if (currentUserRole == "Admin") return true;
+
+            // Nếu không phải Admin, thì ID người đăng nhập phải khớp với ID tài khoản đang thao tác
+            return currentUserId == id.ToString();
         }
     }
 }

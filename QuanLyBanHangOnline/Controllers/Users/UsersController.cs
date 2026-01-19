@@ -13,26 +13,32 @@ using System.Security.Claims;
 using QuanLyBanHangOnline.Services.Interfaces;
 using QuanLyBanHangOnline.DTO.Generic;
 using QuanLyBanHangOnline.Services.Implementations;
+using QuanLyBanHangOnline.Helpers;
 
 namespace QuanLyBanHangOnline.Controllers
 {
-    [Authorize(Roles = "User,Admin")]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class UsersController : ControllerBase
+    public class UsersController : BaseController
     {
         private readonly IUserService _userService;
 
-        public UsersController(IUserService userService)
+        public UsersController(IUserService userService, IAppAuthorizationService authService) : base(authService)
         {
             _userService = userService;
         }
 
         // GET: api/Users
         [HttpGet]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<PagedResult<UserDto>>> GetUser([FromQuery] PaginationParams @params)
         {
+            // Kiểm tra quyền xem danh sách khách hàng
+            if (!await HasPermission("user_view"))
+            {
+                return Forbid();
+            }
+
             var users = await _userService.GetAllAsync(@params);
             return Ok(users);
         }
@@ -41,7 +47,11 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDto>> GetUser(int id)
         {
-            if (!IsOwnerOrAdmin(id)) return Forbid();
+            // Logic: Chính khách hàng đó xem mình HOẶC nhân viên có quyền "user_view"
+            bool isOwnerOrAdmin = IsOwnerOrAdmin(id);
+            bool hasViewPermission = await HasPermission("user_view");
+
+            if (!isOwnerOrAdmin && !hasViewPermission) return Forbid();
             var user = await _userService.GetByIdAsync(id);
             if (user == null) return NotFound();
             return Ok(user);
@@ -51,7 +61,11 @@ namespace QuanLyBanHangOnline.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, UpdateUserDto dto)
         {
-            if (!IsOwnerOrAdmin(id)) return Forbid();
+            // Logic: Chính chủ sửa mình HOẶC nhân viên có quyền "user_edit"
+            bool isOwnerOrAdmin = IsOwnerOrAdmin(id);
+            bool hasEditPermission = await HasPermission("user_edit");
+
+            if (!isOwnerOrAdmin && !hasEditPermission) return Forbid();
             var result = await _userService.UpdateAsync(id, dto);
             if (!result) return NotFound();
             return NoContent();
@@ -76,9 +90,14 @@ namespace QuanLyBanHangOnline.Controllers
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(int id)
         {
+            // Chỉ những người có quyền "user_delete" mới được xóa khách hàng
+            if (!await HasPermission("user_delete"))
+            {
+                return Forbid();
+            }
+
             var result = await _userService.DeleteAsync(id);
             if (!result) return NotFound();
             return NoContent();
