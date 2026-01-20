@@ -39,5 +39,25 @@ public class ApplicationDbContext : DbContext
             Email = "admin99@gmail.com",       
             Password = BCrypt.Net.BCrypt.HashPassword("123456"), 
         });
+
+
+        // Cấu hình quan hệ 1-1 giữa Product và ProductDetail
+        modelBuilder.Entity<Product>()
+            .HasOne(p => p.ProductDetail)
+            .WithOne(d => d.Product)
+            .HasForeignKey<ProductDetail>(d => d.IdSP); // Xác định ProductDetail là bên phụ thuộc
+
+        // Nếu bạn muốn lưu Enum dưới dạng String trong DB (Tùy chọn)
+        modelBuilder.Entity<ProductDetail>()
+            .Property(d => d.Size)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<ProductDetail>()
+            .Property(d => d.Color)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<Product>()
+            .Property(p => p.Category)
+            .HasConversion<string>();
     }
 }

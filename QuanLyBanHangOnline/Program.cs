@@ -14,7 +14,7 @@ using System.Reflection;
 using FluentValidation.AspNetCore;
 using FluentValidation;
 using QuanLyBanHangOnline.Validations.Products;
-
+using System.Text.Json.Serialization;
 
 
 
@@ -55,7 +55,11 @@ builder.Services.AddCors(options =>
 });
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    // Dòng này giúp chuyển đổi tất cả Enum sang String khi trả về JSON
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

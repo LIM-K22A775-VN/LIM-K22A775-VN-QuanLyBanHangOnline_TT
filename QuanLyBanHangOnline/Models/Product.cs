@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using static QuanLyBanHangOnline.Constants.Enums;
 
 namespace quanlybanhangonline.Models
 {
@@ -15,7 +16,10 @@ namespace quanlybanhangonline.Models
 
         public int StockQuantity { get; set; } // SL H/á (Số lượng hàng hóa)
 
-        public string Category { get; set; } // Dmuc (Danh mục)
+        public ProductCategory Category { get; set; } // Dmuc (Danh mục)
         public string Image { get; set; } // Dmuc (Danh mục)
+
+        // Liên kết 1-1: Một sản phẩm có một chi tiết
+        public virtual ProductDetail ProductDetail { get; set; }
     }
 }

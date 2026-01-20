@@ -18,7 +18,7 @@ namespace QuanLyBanHangOnline.Validations.Products
                 .GreaterThanOrEqualTo(0).WithMessage("Số lượng kho không được âm");
 
             RuleFor(x => x.Category)
-                .NotEmpty().WithMessage("Vui lòng chọn danh mục sản phẩm");
+                .IsInEnum().WithMessage("Vui lòng chọn danh mục sản phẩm");
 
             // Validate File Ảnh nâng cao
             RuleFor(x => x.ImageFile)
@@ -26,8 +26,8 @@ namespace QuanLyBanHangOnline.Validations.Products
                 .Must(file => file.Length <= 5 * 1024 * 1024).WithMessage("Kích thước ảnh không được vượt quá 5MB")
                 .Must(file => IsAllowedExtension(file)).WithMessage("Định dạng ảnh phải là .jpg, .jpeg hoặc .png");
 
-            RuleFor(x => x.Size).NotEmpty().WithMessage("Vui lòng nhập kích thước");
-            RuleFor(x => x.Color).NotEmpty().WithMessage("Vui lòng nhập màu sắc");
+            RuleFor(x => x.Size).IsInEnum().WithMessage("Vui lòng nhập kích thước");
+            RuleFor(x => x.Color).IsInEnum().WithMessage("Vui lòng nhập màu sắc");
         }
 
         // Hàm phụ kiểm tra đuôi file

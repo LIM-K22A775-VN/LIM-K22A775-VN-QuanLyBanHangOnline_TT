@@ -83,8 +83,8 @@ namespace QuanLyBanHangOnline.Services.Implementations
                 var detail = new ProductDetail
                 {
                     IdSP = product.IdSP, // Lấy ID vừa sinh ra gán sang đây
-                    Size = dto.Size ?? "N/A",
-                    Color = dto.Color ?? "N/A",
+                    Size = dto.Size,
+                    Color = dto.Color,
                     Description = dto.Description ?? "",
                     StartTB = 0 // Mặc định đánh giá 0 sao khi mới tạo
                 };
@@ -172,8 +172,8 @@ namespace QuanLyBanHangOnline.Services.Implementations
                 ImageUrl = $"{baseUrl}/images/products/{p.Image}",
 
                 // Gán thêm dữ liệu từ bảng Detail
-                Size = d?.Size ?? "",
-                Color = d?.Color ?? "",
+                Size = d.Size,
+                Color = d.Color,
                 Description = d?.Description ?? "",
                 StartTB = d?.StartTB ?? 0
             };

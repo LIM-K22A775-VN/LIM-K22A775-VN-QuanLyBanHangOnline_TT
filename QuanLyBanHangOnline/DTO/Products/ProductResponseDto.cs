@@ -1,4 +1,6 @@
-﻿namespace QuanLyBanHangOnline.DTO.Products
+﻿using static QuanLyBanHangOnline.Constants.Enums;
+
+namespace QuanLyBanHangOnline.DTO.Products
 {
     public class ProductResponseDto
     {
@@ -7,12 +9,12 @@
         public string Name { get; set; }
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
-        public string Category { get; set; }
+        public ProductCategory Category { get; set; }
         public string ImageUrl { get; set; }
 
         // Thuộc tính bổ sung từ bảng ProductDetail
-        public string Size { get; set; }
-        public string Color { get; set; }
+        public ProductSize Size { get; set; }
+        public ProductColor Color { get; set; }
         public string Description { get; set; }
         public decimal StartTB { get; set; } // Điểm đánh giá trung bình
     }
