@@ -41,7 +41,7 @@ namespace QuanLyBanHangOnline.Services.Implementations
         // Lấy thông tin chi tiết một nhân viên theo ID
         public async Task<StaffDto?> GetByIdAsync(int id)
         {
-            var staff = await _context.Staff.FindAsync(id);
+            var staff = await _context.Staff.Include(s => s.Role).FirstOrDefaultAsync(s => s.IdStaff == id);
             if (staff == null) return null;
 
             return new StaffDto
@@ -96,6 +96,10 @@ namespace QuanLyBanHangOnline.Services.Implementations
 
             if (dto.RoleId.HasValue)
             {
+                // Kiểm tra RoleId có thực sự tồn tại trong DB không
+                var roleExists = await _context.Role.AnyAsync(r => r.Id == dto.RoleId.Value);
+                if (!roleExists) throw new Exception("Nhóm quyền được chọn không tồn tại.");
+
                 staff.RoleId = dto.RoleId.Value;
             }
 

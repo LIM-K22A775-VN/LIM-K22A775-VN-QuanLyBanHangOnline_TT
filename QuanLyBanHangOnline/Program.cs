@@ -11,6 +11,9 @@ using QuanLyBanHangOnline.Infrastructure.Jwt;
 using QuanLyBanHangOnline.Services.Interfaces;
 using QuanLyBanHangOnline.Services.Implementations;
 using System.Reflection;
+using FluentValidation.AspNetCore;
+using FluentValidation;
+using QuanLyBanHangOnline.Validations.Products;
 
 
 
@@ -29,7 +32,6 @@ builder.Services.AddHttpContextAccessor();
 // Đăng ký ProductService
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IStaffService, StaffService>();
-builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddScoped<IAppAuthorizationService, AppAuthorizationService>();
 
@@ -57,6 +59,11 @@ builder.Services.AddControllers();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
+// Đăng ký FluentValidation
+builder.Services.AddFluentValidationAutoValidation(); // Tự động kiểm tra khi có request
+builder.Services.AddFluentValidationClientsideAdapters();
+builder.Services.AddValidatorsFromAssemblyContaining<ProductCreateValidator>(); // Tự động tìm tất cả các Validator trong cùng Assembly
 
 // 4. Cấu hình Swagger
 builder.Services.AddSwaggerGen(c =>
@@ -119,6 +126,8 @@ app.UseCors("AllowAngular");
 //Bật middleware
 app.UseAuthentication(); // Xác thực: Bạn là ai?
 app.UseAuthorization();  // Phân quyền: Bạn được làm gì?
+
+
 
 
 app.MapControllers();

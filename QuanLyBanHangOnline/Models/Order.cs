@@ -8,20 +8,23 @@ namespace quanlybanhangonline.Models
     public class Order
     {
         [Key]
-        [JsonIgnore] // Dòng này sẽ làm cho "user" biến mất khỏi JSON yêu cầu
         public int IdDH { get; set; }
 
         [Required]
-        [JsonIgnore] // Dòng này sẽ làm cho "user" biến mất khỏi JSON yêu cầu
         public int IdUser { get; set; }
-        [JsonIgnore] // Dòng này sẽ làm cho "user" biến mất khỏi JSON yêu cầu
         public DateTime OrderDate { get; set; } = DateTime.Now; // Gán mặc định thời gian hiện tại
         public decimal TotalPrice { get; set; }
 
         public Enums.OrderStatus Status { get; set; } = Enums.OrderStatus.ChoXacNhan; // Mặc định là chờ xác nhận
 
+        public string ReceiverName { get; set; } // Tên người nhận
+
+        public string ReceiverPhone { get; set; } // SĐT người nhận
+        public string ShippingAddress { get; set; } // Địa chỉ giao hàng
+        public string? OrderNotes { get; set; } // Ghi chú đơn hàng (ví dụ: giao giờ hành chính)
+
+
         [ForeignKey("IdUser")]
-        [JsonIgnore] // Dòng này sẽ làm cho "user" biến mất khỏi JSON yêu cầu
         public virtual User? User { get; set; }
 
         public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
