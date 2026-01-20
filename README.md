@@ -1,4 +1,7 @@
-Dự án Quản Lý Bán Hàng Online Hệ thống quản lý bán hàng tích hợp Web API (ASP.NET Core) và Frontend (Angular). Hỗ trợ quản lý sản phẩm, đơn hàng, nhân viên và phân quyền chi tiết.
+1. Giới thiệu dự án (Project Overview)
+Dự án Quản Lý Bán Hàng Online Hệ thống quản lý bán hàng tích hợp Web API (ASP.NET Core)
+ và Frontend (Angular). Hỗ trợ quản lý sản phẩm, đơn hàng, nhân viên và phân quyền chi tiết.
+
 2. Công nghệ sử dụng (Tech Stack)
 
 Backend: ASP.NET Core 6.0, Entity Framework Core.
@@ -22,11 +25,11 @@ Review: Hệ thống đánh giá sản phẩm từ người dùng.
 
 
 Hướng dẫn cài đặt
-1.git clone 
-2.Cấu hình Database: Mở file appsettings.json và cập nhật chuỗi kết nối:
-"ConnectionStrings": {
-  "DefaultConnection": "Server=YOUR_SERVER;Database=QuanLyBanHangOnline_n1;Trusted_Connection=True;"
-}
-3.Migration & Update Database: Chạy lệnh sau trong Package Manager Console
-Update-Database
-4.Chạy dự án: Nhấn F5 hoặc chạy lệnh dotnet run. Truy cập Swagger tại /swagger để kiểm tra API.
+ 1.git clone 
+ 2.Cấu hình Database: Mở file appsettings.json và cập nhật chuỗi kết nối:
+ "ConnectionStrings": {
+   "DefaultConnection": "Server=YOUR_SERVER;Database=QuanLyBanHangOnline_n1;Trusted_Connection=True;"
+ }
+ 3.Migration & Update Database: Chạy lệnh sau trong Package Manager Console
+ Update-Database
+ 4.Chạy dự án: Nhấn F5 hoặc chạy lệnh dotnet run. Truy cập Swagger tại /swagger để kiểm tra API.
