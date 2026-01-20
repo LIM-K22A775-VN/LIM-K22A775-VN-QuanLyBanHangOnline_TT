@@ -19,8 +19,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<Order> Order { get; set; }
     public DbSet<OrderDetail> OrderDetail { get; set; }
     public DbSet<Review> Review { get; set; }
+    public DbSet<Role> Role { get; set; }
 
-    public DbSet<QuanLyBanHangOnline.Models.Role> Role { get; set; }
+    public DbSet<AccountOtp> AccountOtps { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Order>()
@@ -59,5 +60,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Product>()
             .Property(p => p.Category)
             .HasConversion<string>();
+
+
     }
 }

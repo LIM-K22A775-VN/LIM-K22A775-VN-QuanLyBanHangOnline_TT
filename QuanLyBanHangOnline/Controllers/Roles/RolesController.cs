@@ -1,15 +1,15 @@
-﻿        using System;
-        using System.Collections.Generic;
-        using System.Linq;
-        using System.Threading.Tasks;
-        using Microsoft.AspNetCore.Authorization;
-        using Microsoft.AspNetCore.Http;
-        using Microsoft.AspNetCore.Mvc;
-        using Microsoft.EntityFrameworkCore;
-        using QuanLyBanHangOnline.DTO.Role;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using quanlybanhangonline.Models;
+using QuanLyBanHangOnline.DTO.Role;
 using QuanLyBanHangOnline.DTO.Roles;
 using QuanLyBanHangOnline.Helpers;
-        using QuanLyBanHangOnline.Models;
 using QuanLyBanHangOnline.Services.Interfaces;
 
         namespace QuanLyBanHangOnline.Controllers.Roles

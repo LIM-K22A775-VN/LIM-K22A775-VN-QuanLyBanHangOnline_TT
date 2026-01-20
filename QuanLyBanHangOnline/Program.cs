@@ -15,6 +15,7 @@ using FluentValidation.AspNetCore;
 using FluentValidation;
 using QuanLyBanHangOnline.Validations.Products;
 using System.Text.Json.Serialization;
+using QuanLyBanHangOnline.Infrastructure.Gmail;
 
 
 
@@ -34,6 +35,10 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IStaffService, StaffService>();
 
 builder.Services.AddScoped<IAppAuthorizationService, AppAuthorizationService>();
+
+
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 
 //Cấu hình Authentication  , JWT 
 builder.Services.AddSystemAuthenticationJwt(builder.Configuration);

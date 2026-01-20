@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace QuanLyBanHangOnline.Models
+namespace quanlybanhangonline.Models
 {
     public class Role
     {

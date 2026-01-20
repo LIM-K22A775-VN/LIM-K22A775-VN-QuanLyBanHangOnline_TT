@@ -9,7 +9,7 @@ using System.Text;
 using QuanLyBanHangOnline.DTO.Auth;
 using QuanLyBanHangOnline.Infrastructure.Jwt;
 using quanlybanhangonline.Models;
-using QuanLyBanHangOnline.Models;
+using QuanLyBanHangOnline.Infrastructure.Gmail;
 
 namespace QuanLyBanHangOnline.Controllers.Auths
 {
@@ -127,6 +127,111 @@ namespace QuanLyBanHangOnline.Controllers.Auths
             return await SignInResponse(int.Parse(idClaim), email, role, entity, roleId);
         }
 
+        [AllowAnonymous]
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto, [FromServices] IEmailService emailService)
+        {
+            // 1. Kiểm tra xem Email có tồn tại trong hệ thống (Admin/Staff/User) không
+            var exists = await _context.Admin.AnyAsync(x => x.Email == dto.Email) ||
+                         await _context.Staff.AnyAsync(x => x.Email == dto.Email) ||
+                         await _context.User.AnyAsync(x => x.Email == dto.Email);
+
+            if (!exists) return BadRequest("Email không tồn tại.");
+
+            // 2. Tạo OTP mới
+            string otpCode = new Random().Next(100000, 999999).ToString();
+
+            var otpEntry = new AccountOtp
+            {
+                Email = dto.Email,
+                OtpCode = otpCode,
+                ExpiryTime = DateTime.UtcNow.AddMinutes(10)
+            };
+
+            _context.AccountOtps.Add(otpEntry);
+            await _context.SaveChangesAsync();
+
+            // 3. Gửi Email (giữ nguyên logic cũ)
+            await emailService.SendEmailAsync(dto.Email, "Mã xác thực OTP", $"Mã của bạn là: {otpCode}");
+
+            return Ok(new { message = "OTP đã được gửi." });
+        }
+
+        [AllowAnonymous]
+        [HttpPost("verify-otp")]
+        public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpDto dto)
+        {
+            var otpEntry = await _context.AccountOtps
+                .Where(x => x.Email == dto.Email && x.OtpCode == dto.Otp && !x.IsUsed)
+                .OrderByDescending(x => x.Id)
+                .FirstOrDefaultAsync();
+
+            if (otpEntry == null || otpEntry.ExpiryTime < DateTime.UtcNow)
+                return BadRequest("Mã OTP không chính xác hoặc đã hết hạn hoặc email bị sai.");
+
+            // Tạo một Token xác thực tạm thời chứa Email
+            var resetToken = _jwtUtils.GenerateResetToken(dto.Email);
+
+            return Ok(new
+            {
+                message = "Xác thực thành công",
+                resetToken = resetToken // Trả token này về cho Frontend
+            });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            // 1. Lấy token từ Header Authorization
+            string authHeader = Request.Headers["Authorization"];
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+                return Unauthorized("Thiếu Token xác thực.");
+
+            string token = authHeader.Substring("Bearer ".Length);
+
+            // 2. Dùng hàm "chứng minh" do chính mình tạo ra
+            var principal = _jwtUtils.GetPrincipalFromResetToken(token);
+
+            if (principal == null)
+                return Unauthorized("Token không hợp lệ hoặc đã hết hạn.");
+
+            // Lấy Email từ Token (ResetToken) đã gửi lên
+            var email = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            if (string.IsNullOrEmpty(email)) return Unauthorized("Phiên làm việc hết hạn");
+
+            if (dto.NewPassword != dto.ConfirmPassword)
+                return BadRequest("Mật khẩu không khớp");
+
+            // Tìm và cập nhật mật khẩu (Dùng logic object account như trước)
+            var admin = await _context.Admin.FirstOrDefaultAsync(x => x.Email == email);
+            var staff = await _context.Staff.FirstOrDefaultAsync(x => x.Email == email);
+            var user = await _context.User.FirstOrDefaultAsync(x => x.Email == email);
+
+            object account = (object)admin ?? (object)staff ?? (object)user;
+            if (account == null) return NotFound();
+
+            // Chuẩn bị dữ liệu cho SignInResponse
+            int id = 0;
+            string role = "";
+            int roleId = 0;
+
+            if (admin != null) { id = admin.IdAdmin; role = "Admin"; }
+            else if (staff != null) { id = staff.IdStaff; role = "Staff"; roleId = staff.RoleId ?? 0; }
+            else if (user != null) { id = user.IdUser; role = "User"; }
+
+            // 3. Cập nhật mật khẩu mới
+            string hashedPass = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            account.GetType().GetProperty("Password")?.SetValue(account, hashedPass);
+
+            // 4. Dọn dẹp OTP (Xóa hết để bảo mật)
+            var otpsToDelete = await _context.AccountOtps.Where(x => x.Email == email).ToListAsync();
+            _context.AccountOtps.RemoveRange(otpsToDelete);
+
+            await _context.SaveChangesAsync();
+
+            // 5. TỰ ĐỘNG ĐĂNG NHẬP: Trả về luôn AccessToken và RefreshToken mới
+            return await SignInResponse(id, email, role, account, roleId);
+        }
         // Hàm phụ để xử lý lưu Token vào DB và trả về kết quả
         private async Task<IActionResult> SignInResponse(int id, string email, string role, object entity,int roleId)
         {

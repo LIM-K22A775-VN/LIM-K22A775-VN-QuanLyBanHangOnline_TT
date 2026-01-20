@@ -1,5 +1,4 @@
 ﻿using Microsoft.IdentityModel.Tokens;
-using QuanLyBanHangOnline.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -89,6 +88,60 @@ namespace QuanLyBanHangOnline.Infrastructure.Jwt
                 // Nếu Token giả, sai chữ ký... 
                 return null;
             }
+        }
+
+        public ClaimsPrincipal? GetPrincipalFromResetToken(string token)
+        {
+            try
+            {
+                var tokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateAudience = true,
+                    ValidateIssuer = true,
+                    ValidateIssuerSigningKey = true,
+                    // Sử dụng ResetKey để đối chiếu chữ ký
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:ResetKey"])),
+                    ValidateLifetime = true, // Token reset bắt buộc phải còn hạn dùng
+                    ValidIssuer = _configuration["Jwt:Issuer"],
+                    ValidAudience = _configuration["Jwt:Audience"],
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+                return tokenHandler.ValidateToken(token, tokenValidationParameters, out _);
+            }
+            catch { return null; }
+        }
+        // 2. Logic tạo Reset Token (Dùng riêng cho Quên mật khẩu - CÁCH LY)
+        public string GenerateResetToken(string email)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Email, email),
+                new Claim(ClaimTypes.Role, "ResetPassword"), // Gán Role đặc biệt
+                new Claim("Purpose", "PasswordReset"),       // Claim đánh dấu mục đích
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            // Sử dụng một Key khác hoàn toàn: Jwt:ResetKey
+            // Thời gian sống cực ngắn (ví dụ 10 phút)
+            return CreateToken(claims, _configuration["Jwt:ResetKey"], 10);
+        }
+        // Hàm dùng chung để tạo Token
+        private string CreateToken(List<Claim> claims, string secretKey, int expireMinutes)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(expireMinutes),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
