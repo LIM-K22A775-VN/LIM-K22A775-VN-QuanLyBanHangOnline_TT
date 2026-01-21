@@ -74,7 +74,8 @@ namespace QuanLyBanHangOnline.Services.Implementations
                     Price = dto.Price,
                     StockQuantity = dto.StockQuantity,
                     Category = dto.Category,
-                    Image = fileName
+                    Image = fileName,
+                    AverageRating = 0 // Mặc định đánh giá 0 sao khi mới tạo
                 };
                 _context.Product.Add(product);
                 await _context.SaveChangesAsync(); // Lúc này product.IdSP sẽ tự sinh ra
@@ -85,8 +86,7 @@ namespace QuanLyBanHangOnline.Services.Implementations
                     IdSP = product.IdSP, // Lấy ID vừa sinh ra gán sang đây
                     Size = dto.Size,
                     Color = dto.Color,
-                    Description = dto.Description ?? "",
-                    StartTB = 0 // Mặc định đánh giá 0 sao khi mới tạo
+                    Description = dto.Description ?? "",              
                 };
                 _context.ProductDetail.Add(detail);
                 await _context.SaveChangesAsync();
@@ -170,12 +170,12 @@ namespace QuanLyBanHangOnline.Services.Implementations
                 StockQuantity = p.StockQuantity,
                 Category = p.Category,
                 ImageUrl = $"{baseUrl}/images/products/{p.Image}",
-
+                AverageRating = p?.AverageRating ?? 0,
                 // Gán thêm dữ liệu từ bảng Detail
                 Size = d.Size,
                 Color = d.Color,
                 Description = d?.Description ?? "",
-                StartTB = d?.StartTB ?? 0
+                
             };
         }
 

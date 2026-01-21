@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using quanlybanhangonline.Models;
+using QuanLyBanHangOnline.Constants;
+using QuanLyBanHangOnline.DTO.Review;
 
 namespace QuanLyBanHangOnline.Controllers.Orders
 {
@@ -22,13 +27,21 @@ namespace QuanLyBanHangOnline.Controllers.Orders
 
         // GET: api/Reviews
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Review>>> GetReview()
+        public async Task<ActionResult<IEnumerable<object>>> GetReviews()
         {
-            if (_context.Review == null)
-            {
-                return NotFound();
-            }
-            return await _context.Review.ToListAsync();
+            return await _context.Review
+                .Include(r => r.Product)
+                .Include(r => r.User)
+                .Select(r => new {
+                    r.IdReview,
+                    r.IdSP,
+                    r.IdUser,
+                    r.User.Email, 
+                    r.Product.Name,
+                    r.Rating,
+                    r.Comment
+                })
+                .ToListAsync();
         }
 
         // GET: api/Reviews/5
@@ -82,19 +95,65 @@ namespace QuanLyBanHangOnline.Controllers.Orders
 
         // POST: api/Reviews
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPost]
-        public async Task<ActionResult<Review>> PostReview(Review review)
+        public async Task<IActionResult> PostReview(CreateReviewDto dto)
         {
-            if (_context.Review == null)
+            // 1. Lấy IdUser từ Token
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null) return Unauthorized();
+            int currentUserId = int.Parse(userIdClaim);
+
+            // 2. Kiểm tra đã mua & nhận hàng chưa
+            var hasPurchased = await _context.Order
+                .AnyAsync(o => o.IdUser == currentUserId
+                               && o.Status == Enums.OrderStatus.DaNhanHang
+                               && o.OrderDetails.Any(od => od.IdSP == dto.IdSP));
+
+            if (!hasPurchased) return BadRequest("Bạn chỉ có thể đánh giá sản phẩm đã mua và nhận hàng thành công.");
+
+            // 3. XỬ LÝ ĐÁNH GIÁ LẠI: Kiểm tra xem đã có đánh giá cũ chưa
+            var existingReview = await _context.Review
+                .FirstOrDefaultAsync(r => r.IdUser == currentUserId && r.IdSP == dto.IdSP);
+
+            if (existingReview != null)
             {
-                return Problem("Entity set 'reviewContext.Review'  is null.");
+                // Cập nhật lại đánh giá cũ
+                existingReview.Rating = dto.Rating;
+                existingReview.Comment = dto.Comment;
+                _context.Review.Update(existingReview);
             }
-            _context.Review.Add(review);
+            else
+            {
+                // Tạo đánh giá mới nếu chưa có
+                var review = new Review
+                {
+                    IdUser = currentUserId,
+                    IdSP = dto.IdSP,
+                    Rating = dto.Rating,
+                    Comment = dto.Comment,
+                };
+                _context.Review.Add(review);
+            }
+
+            // 4. Lưu thay đổi để dữ liệu trong DB được cập nhật trước khi tính trung bình
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetReview", new { id = review.IdReview }, review);
-        }
+            // 5. Tính toán lại AverageRating cho Product
+            var ratings = await _context.Review
+                .Where(r => r.IdSP == dto.IdSP)
+                .Select(r => (int)r.Rating)
+                .ToListAsync();
 
+            var product = await _context.Product.FindAsync(dto.IdSP);
+            if (product != null && ratings.Any())
+            {
+                product.AverageRating = Math.Round(ratings.Average(), 1);
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(new { message = "Cập nhật đánh giá thành công!", averageRating = product?.AverageRating });
+        }
         // DELETE: api/Reviews/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteReview(int id)

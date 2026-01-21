@@ -62,5 +62,11 @@ public class ApplicationDbContext : DbContext
             .HasConversion<string>();
 
 
+        // Khi xóa User, không tự động xóa Review
+        modelBuilder.Entity<Review>()
+            .HasOne(r => r.User)
+            .WithMany()
+            .HasForeignKey(r => r.IdUser)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

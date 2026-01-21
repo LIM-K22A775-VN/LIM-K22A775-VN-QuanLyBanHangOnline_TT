@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace QuanLyBanHangOnline.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260121082802_InitReviewTable")]
+    partial class InitReviewTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -79,7 +81,7 @@ namespace QuanLyBanHangOnline.Migrations
                         {
                             IdAdmin = 1,
                             Email = "admin99@gmail.com",
-                            Password = "$2a$11$Zzj6GX2whISM4O8rQk81heNECB49oBEV1HvetQF4pxH2Fom/prDtS"
+                            Password = "$2a$11$8EE5.NbpGqJ2jivTr8UpMeMmMpNFV/lZcOnYimazWtDvny8Yxa97."
                         });
                 });
 
@@ -223,6 +225,9 @@ namespace QuanLyBanHangOnline.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("IdDH")
+                        .HasColumnType("int");
+
                     b.Property<int>("IdSP")
                         .HasColumnType("int");
 
@@ -233,6 +238,8 @@ namespace QuanLyBanHangOnline.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("IdReview");
+
+                    b.HasIndex("IdDH");
 
                     b.HasIndex("IdSP");
 
@@ -395,6 +402,12 @@ namespace QuanLyBanHangOnline.Migrations
 
             modelBuilder.Entity("quanlybanhangonline.Models.Review", b =>
                 {
+                    b.HasOne("quanlybanhangonline.Models.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("IdDH")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("quanlybanhangonline.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("IdSP")
@@ -406,6 +419,8 @@ namespace QuanLyBanHangOnline.Migrations
                         .HasForeignKey("IdUser")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Order");
 
                     b.Navigation("Product");
 

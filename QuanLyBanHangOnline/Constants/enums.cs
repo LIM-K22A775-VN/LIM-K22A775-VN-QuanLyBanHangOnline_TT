@@ -24,19 +24,23 @@ namespace QuanLyBanHangOnline.Constants
 
         public enum ProductCategory
         {
-            [Display(Name = "Áo Nam")]
             AO_NAM,
-            [Display(Name = "Áo Nữ")]
             AO_NU,
-            [Display(Name = "Quần Nam")]
             QUAN_NAM,
-            [Display(Name = "Quần Nữ")]
             QUAN_NU,
-            [Display(Name = "Phụ Kiện")]
             PHU_KIEN,
-            [Display(Name = "Giày Dép")]
-            GIAY_DEP
+            GIAY_DEP,
         }
+
+        public enum StarRating
+        {
+            ONE = 1,
+            TWO = 2,
+            THREE = 3,
+            FOUR = 4,
+            FIVE = 5
+        }
+
 
     }
 }

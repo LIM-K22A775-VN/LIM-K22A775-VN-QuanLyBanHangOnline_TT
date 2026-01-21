@@ -1,4 +1,6 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -142,6 +144,24 @@ namespace QuanLyBanHangOnline.Infrastructure.Jwt
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        // Hàm phụ để xử lý lưu Token vào DB và trả về kết quả
+        public async Task<object> GenerateSignInResponse(int id, string email, string role, object entity, int roleId)
+        {
+            var accessToken = GenerateJwtToken(id, email, role, roleId);
+            var refreshToken = GenerateRefreshToken();
+
+            // Sử dụng Reflection để gán giá trị cho Entity (User/Staff/Admin)
+            var type = entity.GetType();
+            type.GetProperty("RefreshToken")?.SetValue(entity, refreshToken);
+            type.GetProperty("RefreshTokenExpiryTime")?.SetValue(entity, DateTime.UtcNow.AddDays(7));
+
+            return new
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken
+            };
         }
     }
 }

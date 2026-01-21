@@ -14,6 +14,7 @@ using QuanLyBanHangOnline.Services.Interfaces;
 using QuanLyBanHangOnline.DTO.Generic;
 using QuanLyBanHangOnline.Services.Implementations;
 using QuanLyBanHangOnline.Helpers;
+using QuanLyBanHangOnline.Infrastructure.Jwt;
 
 namespace QuanLyBanHangOnline.Controllers
 {
@@ -23,10 +24,13 @@ namespace QuanLyBanHangOnline.Controllers
     public class UsersController : BaseController
     {
         private readonly IUserService _userService;
-
-        public UsersController(IUserService userService, IAppAuthorizationService authService) : base(authService)
+        private readonly JwtUtils _jwtUtils;
+        private readonly ApplicationDbContext _context; // Thêm DbContext
+        public UsersController(IUserService userService, IAppAuthorizationService authService, JwtUtils jwtUtils, ApplicationDbContext context) : base(authService)
         {
             _userService = userService;
+            _jwtUtils = jwtUtils;
+            _context = context;
         }
 
         // GET: api/Users
@@ -78,18 +82,25 @@ namespace QuanLyBanHangOnline.Controllers
         {
             try
             {
-                await _userService.CreateAsync(dto);
-                return Ok(new { message = "Tạo nguời dùng thành công!" });
+                // 1. Tạo User mới thông qua Service
+                var user = await _userService.CreateAsync(dto);
+
+                // 2. Tạo cặp Token và gán vào Object user thông qua JwtUtils
+                var response = await _jwtUtils.GenerateSignInResponse(user.IdUser, user.Email, "User", user, 0);
+
+                // 3. Lưu Refresh Token vào Database
+                await _context.SaveChangesAsync();
+
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
+
         }
-
-
-        // DELETE: api/Users/5
-        [HttpDelete("{id}")]
+            // DELETE: api/Users/5
+            [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             // Chỉ những người có quyền "user_delete" mới được xóa khách hàng

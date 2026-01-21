@@ -16,6 +16,8 @@ namespace quanlybanhangonline.Models
 
         public int StockQuantity { get; set; } // SL H/á (Số lượng hàng hóa)
 
+        public double AverageRating { get; set; }
+
         public ProductCategory Category { get; set; } // Dmuc (Danh mục)
         public string Image { get; set; } // Dmuc (Danh mục)
 

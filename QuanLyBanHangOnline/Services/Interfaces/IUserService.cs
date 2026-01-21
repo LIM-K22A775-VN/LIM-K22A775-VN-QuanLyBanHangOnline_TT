@@ -1,4 +1,5 @@
-﻿using QuanLyBanHangOnline.DTO.Generic;
+﻿using quanlybanhangonline.Models;
+using QuanLyBanHangOnline.DTO.Generic;
 using QuanLyBanHangOnline.DTO.Users;
 
 namespace QuanLyBanHangOnline.Services.Interfaces
@@ -7,7 +8,7 @@ namespace QuanLyBanHangOnline.Services.Interfaces
     {
         Task<PagedResult<UserDto>> GetAllAsync(PaginationParams @params);
         Task<UserDto?> GetByIdAsync(int id);
-        Task CreateAsync(CreateUserDto dto);
+        Task<User?> CreateAsync(CreateUserDto dto);
         Task<bool> UpdateAsync(int id, UpdateUserDto dto);
         Task<bool> DeleteAsync(int id);
     }

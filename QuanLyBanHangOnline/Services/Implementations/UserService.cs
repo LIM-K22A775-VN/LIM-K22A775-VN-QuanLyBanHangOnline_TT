@@ -49,7 +49,7 @@ namespace QuanLyBanHangOnline.Services.Implementations
             };
         }
 
-        public async Task CreateAsync(CreateUserDto dto)
+        public async Task<User> CreateAsync(CreateUserDto dto)
         {
             // 1. Kiểm tra xem Email đã tồn tại trong hệ thống chưa
             var emailExists = await _context.User.AnyAsync(s => s.Email == dto.Email);
@@ -70,6 +70,7 @@ namespace QuanLyBanHangOnline.Services.Implementations
             };
             _context.User.Add(user);
             await _context.SaveChangesAsync();
+            return user;
         }
 
         public async Task<bool> UpdateAsync(int id, UpdateUserDto dto)

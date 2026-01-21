@@ -13,7 +13,7 @@ namespace quanlybanhangonline.Models
         public ProductSize Size { get; set; }
         public ProductColor Color { get; set; }
         public string Description { get; set; }
-        public decimal StartTB { get; set; }
+        
 
         // Navigation property (giúp truy vấn dữ liệu dễ dàng hơn)
         public virtual Product Product { get; set; }

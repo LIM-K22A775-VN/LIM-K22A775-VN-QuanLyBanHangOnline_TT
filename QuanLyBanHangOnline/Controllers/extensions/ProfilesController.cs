@@ -49,7 +49,8 @@ namespace QuanLyBanHangOnline.Controllers.extensions
                         FullName = staff.FullName,
                         Email = staff.Email,
                         Phone = staff.Phone,
-                        Address = staff.Address
+                        Address = staff.Address,
+                        RoleId = staff.RoleId,
                     });
 
                 case "User":
