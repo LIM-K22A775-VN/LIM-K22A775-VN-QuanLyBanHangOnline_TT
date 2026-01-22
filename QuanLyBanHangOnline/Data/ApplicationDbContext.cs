@@ -1,5 +1,6 @@
 ﻿using Humanizer;
 using Microsoft.EntityFrameworkCore;
+using quanlybanhangonline.Model;
 using quanlybanhangonline.Models;
 
 public class ApplicationDbContext : DbContext
@@ -21,6 +22,13 @@ public class ApplicationDbContext : DbContext
     public DbSet<Review> Review { get; set; }
     public DbSet<Role> Role { get; set; }
 
+    public DbSet<Cart> Cart { get; set; } = default!;
+
+    public DbSet<CartDetail> CartDetail { get; set; } = default!;
+
+    public DbSet<Import> Import { get; set; } = default!;
+
+    public DbSet<ImportDetail> ImportDetail { get; set; } = default!;
     public DbSet<AccountOtp> AccountOtps { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,5 +76,17 @@ public class ApplicationDbContext : DbContext
             .WithMany()
             .HasForeignKey(r => r.IdUser)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Đảm bảo mỗi User chỉ có 1 Cart duy nhất
+        modelBuilder.Entity<Cart>()
+            .HasIndex(c => c.IdUser)
+            .IsUnique();
+
+        // Xóa Cart thì tự động xóa hết CartDetail (Cascade Delete)
+        modelBuilder.Entity<CartDetail>()
+            .HasOne(cd => cd.Cart)
+            .WithMany(c => c.CartDetails)
+            .HasForeignKey(cd => cd.IdCart)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

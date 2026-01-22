@@ -35,6 +35,22 @@
     "mssql9": {
       "type": "mssql",
       "connectionId": "ConnectionStrings:RoleContext"
+    },
+    "mssql10": {
+      "type": "mssql",
+      "connectionId": "ConnectionStrings:CartContext"
+    },
+    "mssql11": {
+      "type": "mssql",
+      "connectionId": "ConnectionStrings:CartDetailContext"
+    },
+    "mssql12": {
+      "type": "mssql",
+      "connectionId": "ConnectionStrings:ImportContext"
+    },
+    "mssql13": {
+      "type": "mssql",
+      "connectionId": "ConnectionStrings:ImportDetailContext"
     }
   }
 }

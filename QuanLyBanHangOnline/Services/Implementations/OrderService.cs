@@ -89,13 +89,26 @@
                         // TRỪ KHO
                         product.StockQuantity -= item.Quantity;
 
-                        var detail = new OrderDetail
+                        // 4. QUAN TRỌNG: XÓA SẢN PHẨM NÀY KHỎI GIỎ HÀNG (CartDetail)
+                        var cart = await _context.Cart.FirstOrDefaultAsync(c => c.IdUser == userId);
+                        if (cart != null)
+                        {
+                            var cartItemToDelete = await _context.CartDetail
+                                .FirstOrDefaultAsync(cd => cd.IdCart == cart.IdCart && cd.IdSP == item.IdSP);
+
+                            if (cartItemToDelete != null)
+                            {
+                                _context.CartDetail.Remove(cartItemToDelete);
+                            }
+                        }
+
+                    var detail = new OrderDetail
                         {
                             IdSP = item.IdSP,
                             Quantity = item.Quantity,
                             Price = product.Price
                         };
-
+                       
                         newOrder.TotalPrice += (detail.Price * detail.Quantity);
                         newOrder.OrderDetails.Add(detail);
                     }
@@ -113,57 +126,48 @@
                 }
             }
 
-            public async Task<bool> UpdateStatusAsync(int id, Enums.OrderStatus newStatus, int userId, string userRole)
+        public async Task<bool> UpdateStatusAsync(int id, Enums.OrderStatus newStatus, int userId, string userRole)
+        {
+            var order = await _context.Order
+                .Include(o => o.OrderDetails)
+                .FirstOrDefaultAsync(o => o.IdDH == id);
+
+            if (order == null) return false;
+
+            // Kiểm tra quyền sở hữu
+            if (userRole != "Admin" && userRole != "Staff" && order.IdUser != userId) return false;
+
+            // --- LOGIC QUAN TRỌNG: XỬ LÝ KHO KHI THAY ĐỔI TRẠNG THÁI ---
+
+            // TRƯỜNG HỢP 1: HỦY ĐƠN (Hoàn kho)
+            if (newStatus == Enums.OrderStatus.DaHuy && order.Status != Enums.OrderStatus.DaHuy)
             {
-                var order = await _context.Order
-                    .Include(o => o.OrderDetails)
-                    .FirstOrDefaultAsync(o => o.IdDH == id);
-
-                if (order == null) return false;
-
-                // 1. BẢO MẬT: Kiểm tra quyền sở hữu đơn hàng
-                if (userRole != "Admin" && userRole != "Staff" && order.IdUser != userId)
+                foreach (var detail in order.OrderDetails)
                 {
-                    return false;
+                    var product = await _context.Product.FindAsync(detail.IdSP);
+                    if (product != null) product.StockQuantity += detail.Quantity;
                 }
-
-                // 2. PHÂN QUYỀN LOGIC TRẠNG THÁI
-                if (userRole != "Admin" && userRole != "Staff")
-                {
-                    // NẾU LÀ USER THƯỜNG:
-                    if(newStatus != Enums.OrderStatus.DaHuy && newStatus != Enums.OrderStatus.ChoXacNhan) return false;
-                }
-                else
-                {
-                    // NẾU LÀ STAFF/ADMIN:
-                    // Chặn không cho đổi trạng thái nếu đơn đã kết thúc Đã nhận
-                    if (order.Status == Enums.OrderStatus.DaNhanHang)
-                    {
-                        return false;
-                    }
-                }
-
-                // 3. XỬ LÝ HOÀN KHO KHI HỦY ĐƠN
-                if (newStatus == Enums.OrderStatus.DaHuy)
-                {
-                    // Hoàn kho (vì User chỉ hủy được khi status = 0, Staff có thể hủy khi status = 0 hoặc 1)
-                    foreach (var detail in order.OrderDetails)
-                    {
-                        var product = await _context.Product.FindAsync(detail.IdSP);
-                        if (product != null)
-                        {
-                            product.StockQuantity += detail.Quantity;
-                        }
-                    }
-                }
-
-                // 4. CẬP NHẬT
-                order.Status = newStatus;
-                await _context.SaveChangesAsync();
-                return true;
             }
 
-            public async Task<bool> DeleteOrderAsync(int id, int userId, string userRole)
+            // TRƯỜNG HỢP 2: KHÁCH XÁC NHẬN LẠI ĐƠN ĐÃ HỦY (Trừ kho lại)
+            else if (newStatus == Enums.OrderStatus.ChoXacNhan && order.Status == Enums.OrderStatus.DaHuy)
+            {
+                foreach (var detail in order.OrderDetails)
+                {
+                    var product = await _context.Product.FindAsync(detail.IdSP);
+                    if (product == null || product.StockQuantity < detail.Quantity)
+                    {
+                        throw new Exception($"Sản phẩm '{product?.Name}' không đủ hàng để đặt lại.");
+                    }
+                    product.StockQuantity -= detail.Quantity;
+                }
+            }
+
+            order.Status = newStatus;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        public async Task<bool> DeleteOrderAsync(int id, int userId, string userRole)
             {
                 var order = await _context.Order
                     .Include(o => o.OrderDetails)

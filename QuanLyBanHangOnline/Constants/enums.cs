@@ -40,7 +40,5 @@ namespace QuanLyBanHangOnline.Constants
             FOUR = 4,
             FIVE = 5
         }
-
-
     }
 }

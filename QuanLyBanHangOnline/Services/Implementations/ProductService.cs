@@ -116,8 +116,8 @@ namespace QuanLyBanHangOnline.Services.Implementations
                 // Cập nhật bảng Product
                 product.Name = dto.Name;
                 product.Price = dto.Price;
-                product.StockQuantity = dto.StockQuantity;
                 product.Category = dto.Category;
+                product.StockQuantity = dto.StockQuantity;
 
                 if (dto.ImageFile != null)
                 {

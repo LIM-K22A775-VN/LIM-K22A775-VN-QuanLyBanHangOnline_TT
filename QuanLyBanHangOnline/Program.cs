@@ -18,7 +18,6 @@ using System.Text.Json.Serialization;
 using QuanLyBanHangOnline.Infrastructure.Gmail;
 
 
-
 var builder = WebApplication.CreateBuilder(args);
 // --- DỊCH VỤ HỆ THỐNG ---
 

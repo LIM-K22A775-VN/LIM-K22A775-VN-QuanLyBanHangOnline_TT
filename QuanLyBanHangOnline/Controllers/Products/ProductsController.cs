@@ -45,9 +45,9 @@ namespace QuanLyBanHangOnline.Controllers.Products
         [HttpPost]
         public async Task<ActionResult<ProductResponseDto>> PostProduct([FromForm] ProductCreateDto dto)
         {
-            // Kiểm tra quyền "product_create" trực tiếp từ DB   
+            // Kiểm tra quyền "product_post" trực tiếp từ DB   
             // Gọi hàm HasPermission từ BaseController - Check DB trực tiếp
-            if (!await HasPermission("product_create")) return Forbid();
+            if (!await HasPermission("product_post")) return Forbid();
 
             var result = await _productService.CreateAsync(dto);
             return CreatedAtAction(nameof(GetProduct), new { id = result.IdSP }, result);

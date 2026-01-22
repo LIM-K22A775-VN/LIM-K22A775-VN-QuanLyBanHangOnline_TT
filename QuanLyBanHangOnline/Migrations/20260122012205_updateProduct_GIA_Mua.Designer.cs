@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace QuanLyBanHangOnline.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260122012205_updateProduct_GIA_Mua")]
+    partial class updateProduct_GIA_Mua
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -20,28 +22,6 @@ namespace QuanLyBanHangOnline.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
-
-            modelBuilder.Entity("quanlybanhangonline.Model.Cart", b =>
-                {
-                    b.Property<int>("IdCart")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCart"), 1L, 1);
-
-                    b.Property<int>("IdUser")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.HasKey("IdCart");
-
-                    b.HasIndex("IdUser")
-                        .IsUnique();
-
-                    b.ToTable("Cart");
-                });
 
             modelBuilder.Entity("quanlybanhangonline.Models.AccountOtp", b =>
                 {
@@ -101,87 +81,8 @@ namespace QuanLyBanHangOnline.Migrations
                         {
                             IdAdmin = 1,
                             Email = "admin99@gmail.com",
-                            Password = "$2a$11$0OSlnLUTm58iRPX5TtKQPOz3Nci0Lo.hByP9/kFpbD89yIohVmtN2"
+                            Password = "$2a$11$QkHFI62z7Koevtmdq9uGt.UiXx6cxrTOVXe2nHz2NdNMylkmzKHW6"
                         });
-                });
-
-            modelBuilder.Entity("quanlybanhangonline.Models.CartDetail", b =>
-                {
-                    b.Property<int>("IdCartDetail")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCartDetail"), 1L, 1);
-
-                    b.Property<int>("IdCart")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdSP")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.HasKey("IdCartDetail");
-
-                    b.HasIndex("IdCart");
-
-                    b.HasIndex("IdSP");
-
-                    b.ToTable("CartDetail");
-                });
-
-            modelBuilder.Entity("quanlybanhangonline.Models.Import", b =>
-                {
-                    b.Property<int>("IdImport")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdImport"), 1L, 1);
-
-                    b.Property<int>("IdStaff")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("ImportDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("TotalCost")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("IdImport");
-
-                    b.HasIndex("IdStaff");
-
-                    b.ToTable("Import");
-                });
-
-            modelBuilder.Entity("quanlybanhangonline.Models.ImportDetail", b =>
-                {
-                    b.Property<int>("IdImportDetail")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdImportDetail"), 1L, 1);
-
-                    b.Property<int>("IdImport")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdSP")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("ImportPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.HasKey("IdImportDetail");
-
-                    b.HasIndex("IdImport");
-
-                    b.HasIndex("IdSP");
-
-                    b.ToTable("ImportDetail");
                 });
 
             modelBuilder.Entity("quanlybanhangonline.Models.Order", b =>
@@ -280,6 +181,9 @@ namespace QuanLyBanHangOnline.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PriceOriginal")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("StockQuantity")
@@ -453,66 +357,6 @@ namespace QuanLyBanHangOnline.Migrations
                     b.ToTable("User");
                 });
 
-            modelBuilder.Entity("quanlybanhangonline.Model.Cart", b =>
-                {
-                    b.HasOne("quanlybanhangonline.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("IdUser")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("quanlybanhangonline.Models.CartDetail", b =>
-                {
-                    b.HasOne("quanlybanhangonline.Model.Cart", "Cart")
-                        .WithMany("CartDetails")
-                        .HasForeignKey("IdCart")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("quanlybanhangonline.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("IdSP")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Cart");
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("quanlybanhangonline.Models.Import", b =>
-                {
-                    b.HasOne("quanlybanhangonline.Models.Staff", "Staff")
-                        .WithMany()
-                        .HasForeignKey("IdStaff")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Staff");
-                });
-
-            modelBuilder.Entity("quanlybanhangonline.Models.ImportDetail", b =>
-                {
-                    b.HasOne("quanlybanhangonline.Models.Import", "Import")
-                        .WithMany("ImportDetails")
-                        .HasForeignKey("IdImport")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("quanlybanhangonline.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("IdSP")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Import");
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("quanlybanhangonline.Models.Order", b =>
                 {
                     b.HasOne("quanlybanhangonline.Models.User", "User")
@@ -580,16 +424,6 @@ namespace QuanLyBanHangOnline.Migrations
                         .HasForeignKey("RoleId");
 
                     b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("quanlybanhangonline.Model.Cart", b =>
-                {
-                    b.Navigation("CartDetails");
-                });
-
-            modelBuilder.Entity("quanlybanhangonline.Models.Import", b =>
-                {
-                    b.Navigation("ImportDetails");
                 });
 
             modelBuilder.Entity("quanlybanhangonline.Models.Order", b =>
