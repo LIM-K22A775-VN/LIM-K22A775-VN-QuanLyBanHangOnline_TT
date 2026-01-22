@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using quanlybanhangonline.Model;
 using quanlybanhangonline.Models;
+using QuanLyBanHangOnline.Models;
 
 public class ApplicationDbContext : DbContext
 {
@@ -30,63 +31,73 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<ImportDetail> ImportDetail { get; set; } = default!;
     public DbSet<AccountOtp> AccountOtps { get; set; }
+    public DbSet<Account> Accounts { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Order>()
-            .Property(o => o.Status)
-            .HasConversion<string>(); // Lưu "ChoXacNhan"   
+        // --- 1. CẤU HÌNH KẾ THỪA TPT (Table-Per-Type) ---
+        // Điều này tạo ra các bảng riêng biệt kết nối qua IdAccount
+        modelBuilder.Entity<Account>().ToTable("Accounts");
+        modelBuilder.Entity<Admin>().ToTable("Admins");
+        modelBuilder.Entity<Staff>().ToTable("Staffs");
+        modelBuilder.Entity<User>().ToTable("Users");
 
-        modelBuilder.Entity<ProductDetail>()
-        .HasOne<Product>()
-        .WithOne()
-        .HasForeignKey<ProductDetail>(pd => pd.IdSP);
+        // --- 2. CẤU HÌNH PHIẾU NHẬP (IMPORT) ---
+        // Bây giờ Import chỉ cần trỏ đến Account (có thể là Admin hoặc Staff)
+        modelBuilder.Entity<Import>()
+            .HasOne(i => i.Account)
+            .WithMany()
+            .HasForeignKey(i => i.IdAccount)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        // --- SEED DATA: Tạo tài khoản Admin mặc định ---
+        // --- 3. SEED DATA CHO ADMIN (Cập nhật theo cấu trúc mới) ---
+        // Lưu ý: Password nên được hash trước khi đưa vào HasData
         modelBuilder.Entity<Admin>().HasData(new Admin
         {
-            IdAdmin = 1,
-            Email = "admin99@gmail.com",       
-            Password = BCrypt.Net.BCrypt.HashPassword("123456"), 
+            IdAccount = 1, // ID chung từ Account
+            Email = "admin99@gmail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("123456"),
+            RoleType = "Admin"
         });
 
+        // --- 4. CẤU HÌNH CÁC QUAN HỆ KHÁC ---
 
-        // Cấu hình quan hệ 1-1 giữa Product và ProductDetail
+        // Quan hệ 1-1 giữa Product và ProductDetail
         modelBuilder.Entity<Product>()
             .HasOne(p => p.ProductDetail)
             .WithOne(d => d.Product)
-            .HasForeignKey<ProductDetail>(d => d.IdSP); // Xác định ProductDetail là bên phụ thuộc
+            .HasForeignKey<ProductDetail>(d => d.IdSP);
 
-        // Nếu bạn muốn lưu Enum dưới dạng String trong DB (Tùy chọn)
-        modelBuilder.Entity<ProductDetail>()
-            .Property(d => d.Size)
-            .HasConversion<string>();
+        // Chuyển đổi Enum sang String để lưu vào DB
+        modelBuilder.Entity<Order>().Property(o => o.Status).HasConversion<string>();
+        modelBuilder.Entity<ProductDetail>().Property(d => d.Size).HasConversion<string>();
+        modelBuilder.Entity<ProductDetail>().Property(d => d.Color).HasConversion<string>();
+        modelBuilder.Entity<Product>().Property(p => p.Category).HasConversion<string>();
 
-        modelBuilder.Entity<ProductDetail>()
-            .Property(d => d.Color)
-            .HasConversion<string>();
+        // Giỏ hàng (Cart) và Chi tiết giỏ hàng (CartDetail)
+        modelBuilder.Entity<Cart>()
+            .HasIndex(c => c.IdUser)
+            .IsUnique();
 
-        modelBuilder.Entity<Product>()
-            .Property(p => p.Category)
-            .HasConversion<string>();
+        modelBuilder.Entity<CartDetail>()
+            .HasOne(cd => cd.Cart)
+            .WithMany(c => c.CartDetails)
+            .HasForeignKey(cd => cd.IdCart)
+            .OnDelete(DeleteBehavior.Cascade);
 
-
-        // Khi xóa User, không tự động xóa Review
+        // Review liên kết với bảng User cụ thể
         modelBuilder.Entity<Review>()
             .HasOne(r => r.User)
             .WithMany()
             .HasForeignKey(r => r.IdUser)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Đảm bảo mỗi User chỉ có 1 Cart duy nhất
-        modelBuilder.Entity<Cart>()
-            .HasIndex(c => c.IdUser)
-            .IsUnique();
-
-        // Xóa Cart thì tự động xóa hết CartDetail (Cascade Delete)
-        modelBuilder.Entity<CartDetail>()
-            .HasOne(cd => cd.Cart)
-            .WithMany(c => c.CartDetails)
-            .HasForeignKey(cd => cd.IdCart)
-            .OnDelete(DeleteBehavior.Cascade);
+        // Cấu hình liên kết OTP qua Email thay vì ID
+        modelBuilder.Entity<AccountOtp>()
+            .HasOne(tp => tp.Account)
+            .WithMany() // Một tài khoản có thể có nhiều yêu cầu OTP theo thời gian
+            .HasPrincipalKey(a => a.Email) // Xác định Email là cột tham chiếu bên bảng Account
+            .HasForeignKey(tp => tp.Email)  // Xác định Email là cột khóa ngoại bên bảng AccountOtp
+            .OnDelete(DeleteBehavior.Cascade); // Xóa tài khoản thì xóa luôn các mã OTP liên quan
     }
 }

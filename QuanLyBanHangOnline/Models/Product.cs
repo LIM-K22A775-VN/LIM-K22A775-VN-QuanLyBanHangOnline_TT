@@ -14,6 +14,7 @@ namespace quanlybanhangonline.Models
 
         public decimal Price { get; set; } // Giá
 
+        public decimal ImportPrice { get; set; } // GIÁ NHẬP VÀO (Mới thêm)
         public int StockQuantity { get; set; } // SL H/á (Số lượng hàng hóa)
 
         public double AverageRating { get; set; }

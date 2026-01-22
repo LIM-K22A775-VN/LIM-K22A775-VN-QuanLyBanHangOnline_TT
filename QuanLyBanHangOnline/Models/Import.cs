@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using QuanLyBanHangOnline.Models;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace quanlybanhangonline.Models
@@ -7,18 +8,15 @@ namespace quanlybanhangonline.Models
     {
         [Key]
         public int IdImport { get; set; }
-
         public DateTime ImportDate { get; set; } = DateTime.Now;
 
-        [Required]
-        public int IdStaff { get; set; }
+        // Trỏ đến ID chung của lớp cha Account
+        public int IdAccount { get; set; }
+        public decimal TotalCost { get; set; }
 
-        public decimal TotalCost { get; set; } // Tổng tiền của cả phiếu nhập
+        [ForeignKey("IdAccount")]
+        public virtual Account? Account { get; set; }
 
-        [ForeignKey("IdStaff")]
-        public virtual Staff? Staff { get; set; }
-
-        // Quan hệ 1-N với Chi tiết nhập
         public virtual ICollection<ImportDetail> ImportDetails { get; set; } = new List<ImportDetail>();
     }
 }

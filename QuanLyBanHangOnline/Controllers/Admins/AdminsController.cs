@@ -47,7 +47,7 @@ namespace QuanLyBanHangOnline.Controllers.Admins
             try
             {
                 await _adminService.CreateAsync(admin);
-                return CreatedAtAction("GetAdmin", new { id = admin.IdAdmin }, admin);
+                return CreatedAtAction("GetAdmin", new { id = admin.IdAccount }, admin);
             }
             catch (Exception ex) {
                 return BadRequest(new { message = ex.Message });

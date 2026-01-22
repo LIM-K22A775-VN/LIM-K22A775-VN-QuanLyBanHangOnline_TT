@@ -19,7 +19,7 @@ namespace QuanLyBanHangOnline.Services.Implementations
         public async Task<PagedResult<Admin>> GetAllAsync(PaginationParams @params)
         {
             var query = _context.Admin 
-                .OrderBy(a => a.IdAdmin)
+                .OrderBy(a => a.IdAccount)
                 .AsQueryable();
 
             // 2. Dùng hàm Helper đã viết để xử lý toàn bộ logic phân trang & chặn số âm
@@ -51,10 +51,10 @@ namespace QuanLyBanHangOnline.Services.Implementations
 
         public async Task<bool> UpdateAsync(int id, Admin admin)
         {
-            if (id != admin.IdAdmin) return false;
+            if (id != admin.IdAccount) return false;
 
             // Kiểm tra tồn tại trước khi cập nhật
-            var existingAdmin = await _context.Admin.AnyAsync(e => e.IdAdmin == id);
+            var existingAdmin = await _context.Admin.AnyAsync(e => e.IdAccount == id);
             if (!existingAdmin) return false;
 
             _context.Entry(admin).State = EntityState.Modified;

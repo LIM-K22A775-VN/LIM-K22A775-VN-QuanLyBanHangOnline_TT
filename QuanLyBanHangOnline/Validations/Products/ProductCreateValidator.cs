@@ -14,6 +14,10 @@ namespace QuanLyBanHangOnline.Validations.Products
             RuleFor(x => x.Price)
                 .GreaterThanOrEqualTo(1000).WithMessage("Giá sản phẩm tối thiểu là 1,000đ"); //Lớn hơn hoặc bằng
 
+            RuleFor(x => x.ImportPrice)
+                .GreaterThanOrEqualTo(1000).WithMessage("Giá sản phẩm tối thiểu là 1,000đ"); //Lớn hơn hoặc bằng
+
+
             RuleFor(x => x.StockQuantity)
                 .GreaterThanOrEqualTo(0).WithMessage("Số lượng kho không được âm");
 
@@ -22,6 +26,7 @@ namespace QuanLyBanHangOnline.Validations.Products
 
             // Validate File Ảnh nâng cao
             RuleFor(x => x.ImageFile)
+                .NotNull().WithMessage("Vui lòng chọn ảnh cho sản phẩm.")
                 //(Custom Validation) bằng biểu thức Lambda. file.Length : kb  1 KB = 1024 Bytes. 1 MB = 1024 KB 1 GB = 1024 MB
                 .Must(file => file.Length <= 5 * 1024 * 1024).WithMessage("Kích thước ảnh không được vượt quá 5MB")
                 .Must(file => IsAllowedExtension(file)).WithMessage("Định dạng ảnh phải là .jpg, .jpeg hoặc .png");

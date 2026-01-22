@@ -78,12 +78,17 @@ public class OrdersController : BaseController
         {
             return Forbid();
         }
-
-        // Truyền thêm userId và role vào Service để kiểm tra chính chủ
-        var result = await _orderService.UpdateStatusAsync(id, newStatus, userId, role);
-
-        if (!result) return BadRequest("Không thể cập nhật trạng thái đơn hàng (đơn đã giao hoặc không có quyền).");
-        return Ok(new { message = "Cập nhật trạng thái thành công" });
+        try
+        {
+            // Truyền thêm userId và role vào Service để kiểm tra chính chủ
+            var result = await _orderService.UpdateStatusAsync(id, newStatus, userId, role);
+            if (!result) return BadRequest("Không thể cập nhật trạng thái đơn hàng (đơn đã giao hoặc không có quyền).");
+            return Ok(new { message = "Cập nhật trạng thái thành công" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteOrder(int id)

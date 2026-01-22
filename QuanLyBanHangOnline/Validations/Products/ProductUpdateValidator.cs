@@ -18,6 +18,9 @@ namespace QuanLyBanHangOnline.Validations.Products
             RuleFor(x => x.Price)
                 .GreaterThanOrEqualTo(1000).WithMessage("Giá sản phẩm tối thiểu là 1,000đ");
 
+            RuleFor(x => x.ImportPrice)
+                .GreaterThanOrEqualTo(1000).WithMessage("Giá sản phẩm tối thiểu là 1,000đ"); //Lớn hơn hoặc bằng
+
             RuleFor(x => x.StockQuantity)
                 .GreaterThanOrEqualTo(0).WithMessage("Số lượng kho không được âm");
 

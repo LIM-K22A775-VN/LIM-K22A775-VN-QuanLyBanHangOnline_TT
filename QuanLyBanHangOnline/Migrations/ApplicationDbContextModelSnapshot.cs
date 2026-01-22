@@ -43,6 +43,37 @@ namespace QuanLyBanHangOnline.Migrations
                     b.ToTable("Cart");
                 });
 
+            modelBuilder.Entity("QuanLyBanHangOnline.Models.Account", b =>
+                {
+                    b.Property<int>("IdAccount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdAccount"), 1L, 1);
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RoleType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("IdAccount");
+
+                    b.ToTable("Accounts", (string)null);
+                });
+
             modelBuilder.Entity("quanlybanhangonline.Models.AccountOtp", b =>
                 {
                     b.Property<int>("Id")
@@ -53,7 +84,7 @@ namespace QuanLyBanHangOnline.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("ExpiryTime")
                         .HasColumnType("datetime2");
@@ -67,42 +98,9 @@ namespace QuanLyBanHangOnline.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email");
+
                     b.ToTable("AccountOtps");
-                });
-
-            modelBuilder.Entity("quanlybanhangonline.Models.Admin", b =>
-                {
-                    b.Property<int>("IdAdmin")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdAdmin"), 1L, 1);
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RefreshToken")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("RefreshTokenExpiryTime")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("IdAdmin");
-
-                    b.ToTable("Admin");
-
-                    b.HasData(
-                        new
-                        {
-                            IdAdmin = 1,
-                            Email = "admin99@gmail.com",
-                            Password = "$2a$11$0OSlnLUTm58iRPX5TtKQPOz3Nci0Lo.hByP9/kFpbD89yIohVmtN2"
-                        });
                 });
 
             modelBuilder.Entity("quanlybanhangonline.Models.CartDetail", b =>
@@ -139,7 +137,7 @@ namespace QuanLyBanHangOnline.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdImport"), 1L, 1);
 
-                    b.Property<int>("IdStaff")
+                    b.Property<int>("IdAccount")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("ImportDate")
@@ -150,7 +148,7 @@ namespace QuanLyBanHangOnline.Migrations
 
                     b.HasKey("IdImport");
 
-                    b.HasIndex("IdStaff");
+                    b.HasIndex("IdAccount");
 
                     b.ToTable("Import");
                 });
@@ -275,6 +273,9 @@ namespace QuanLyBanHangOnline.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("ImportPrice")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -366,40 +367,37 @@ namespace QuanLyBanHangOnline.Migrations
                     b.ToTable("Role");
                 });
 
+            modelBuilder.Entity("quanlybanhangonline.Models.Admin", b =>
+                {
+                    b.HasBaseType("QuanLyBanHangOnline.Models.Account");
+
+                    b.ToTable("Admins", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            IdAccount = 1,
+                            Email = "admin99@gmail.com",
+                            Password = "$2a$11$i17SpHQf4BISsljl/aLloOvwS/YRGztKwWWYDIOWeBc2Etemw6zj2",
+                            RoleType = "Admin"
+                        });
+                });
+
             modelBuilder.Entity("quanlybanhangonline.Models.Staff", b =>
                 {
-                    b.Property<int>("IdStaff")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdStaff"), 1L, 1);
+                    b.HasBaseType("QuanLyBanHangOnline.Models.Account");
 
                     b.Property<string>("Address")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RefreshToken")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("RefreshTokenExpiryTime")
-                        .HasColumnType("datetime2");
 
                     b.Property<int?>("RoleId")
                         .HasColumnType("int");
@@ -407,26 +405,16 @@ namespace QuanLyBanHangOnline.Migrations
                     b.Property<decimal>("Salary")
                         .HasColumnType("decimal(18,2)");
 
-                    b.HasKey("IdStaff");
-
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Staff");
+                    b.ToTable("Staffs", (string)null);
                 });
 
             modelBuilder.Entity("quanlybanhangonline.Models.User", b =>
                 {
-                    b.Property<int>("IdUser")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUser"), 1L, 1);
+                    b.HasBaseType("QuanLyBanHangOnline.Models.Account");
 
                     b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -434,23 +422,11 @@ namespace QuanLyBanHangOnline.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("RefreshToken")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("RefreshTokenExpiryTime")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("IdUser");
-
-                    b.ToTable("User");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("quanlybanhangonline.Model.Cart", b =>
@@ -462,6 +438,18 @@ namespace QuanLyBanHangOnline.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("quanlybanhangonline.Models.AccountOtp", b =>
+                {
+                    b.HasOne("QuanLyBanHangOnline.Models.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("Email")
+                        .HasPrincipalKey("Email")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("quanlybanhangonline.Models.CartDetail", b =>
@@ -485,13 +473,13 @@ namespace QuanLyBanHangOnline.Migrations
 
             modelBuilder.Entity("quanlybanhangonline.Models.Import", b =>
                 {
-                    b.HasOne("quanlybanhangonline.Models.Staff", "Staff")
+                    b.HasOne("QuanLyBanHangOnline.Models.Account", "Account")
                         .WithMany()
-                        .HasForeignKey("IdStaff")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("IdAccount")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Staff");
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("quanlybanhangonline.Models.ImportDetail", b =>
@@ -573,13 +561,37 @@ namespace QuanLyBanHangOnline.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("quanlybanhangonline.Models.Admin", b =>
+                {
+                    b.HasOne("QuanLyBanHangOnline.Models.Account", null)
+                        .WithOne()
+                        .HasForeignKey("quanlybanhangonline.Models.Admin", "IdAccount")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("quanlybanhangonline.Models.Staff", b =>
                 {
+                    b.HasOne("QuanLyBanHangOnline.Models.Account", null)
+                        .WithOne()
+                        .HasForeignKey("quanlybanhangonline.Models.Staff", "IdAccount")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+
                     b.HasOne("quanlybanhangonline.Models.Role", "Role")
                         .WithMany()
                         .HasForeignKey("RoleId");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("quanlybanhangonline.Models.User", b =>
+                {
+                    b.HasOne("QuanLyBanHangOnline.Models.Account", null)
+                        .WithOne()
+                        .HasForeignKey("quanlybanhangonline.Models.User", "IdAccount")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("quanlybanhangonline.Model.Cart", b =>

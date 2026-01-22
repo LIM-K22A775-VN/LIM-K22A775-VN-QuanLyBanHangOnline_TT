@@ -20,10 +20,10 @@ namespace QuanLyBanHangOnline.Services.Implementations
         public async Task<PagedResult<UserDto>> GetAllAsync(PaginationParams @params)
         {
             var query = _context.User
-                .OrderBy(u => u.IdUser)
+                .OrderBy(u => u.IdAccount)
                 .Select(u => new UserDto
                 {
-                    IdUser = u.IdUser,
+                    IdUser = u.IdAccount,
                     Email = u.Email,
                     FullName = u.FullName,
                     Phone = u.Phone,
@@ -41,7 +41,7 @@ namespace QuanLyBanHangOnline.Services.Implementations
 
             return new UserDto
             {
-                IdUser = user.IdUser,
+                IdUser = user.IdAccount,
                 Email = user.Email,
                 FullName = user.FullName,
                 Phone = user.Phone,

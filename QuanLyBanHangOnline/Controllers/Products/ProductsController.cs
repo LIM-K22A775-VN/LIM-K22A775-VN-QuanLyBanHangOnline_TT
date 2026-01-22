@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -45,12 +46,26 @@ namespace QuanLyBanHangOnline.Controllers.Products
         [HttpPost]
         public async Task<ActionResult<ProductResponseDto>> PostProduct([FromForm] ProductCreateDto dto)
         {
-            // Kiểm tra quyền "product_post" trực tiếp từ DB   
-            // Gọi hàm HasPermission từ BaseController - Check DB trực tiếp
+            // 1. Kiểm tra quyền hạn từ BaseController
             if (!await HasPermission("product_post")) return Forbid();
 
-            var result = await _productService.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetProduct), new { id = result.IdSP }, result);
+            // 2. Lấy IdAccount của người đang đăng nhập từ JWT Token
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized("Không tìm thấy định danh người dùng.");
+
+            int currentUserId = int.Parse(userIdClaim);
+
+            try
+            {
+                // 3. Truyền thêm currentUserId vào Service để tự động tạo phiếu nhập (Import)
+                var result = await _productService.CreateAsync(dto, currentUserId);
+                return CreatedAtAction(nameof(GetProduct), new { id = result.IdSP }, result);
+            }
+            catch (Exception ex)
+            {
+                // Xử lý các lỗi nghiệp vụ (ví dụ: lỗi lưu file, lỗi DB)
+                return BadRequest(ex.Message);
+            }
         }
 
 

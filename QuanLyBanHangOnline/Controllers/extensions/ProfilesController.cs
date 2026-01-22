@@ -38,14 +38,14 @@ namespace QuanLyBanHangOnline.Controllers.extensions
                     var admin = await _context.Admin.FindAsync(userId);
                     if (admin == null) return NotFound("Không tìm thấy thông tin Admin");
                     // Bạn có thể tạo AdminDto nếu cần, ở đây mình trả về object ẩn danh cho nhanh
-                    return Ok(new { id = admin.IdAdmin, email = admin.Email, role = "Admin", fullName = "Quản trị viên" });
+                    return Ok(new { id = admin.IdAccount, email = admin.Email, role = "Admin", fullName = "Quản trị viên" });
 
                 case "Staff":
                     var staff = await _context.Staff.FindAsync(userId);
                     if (staff == null) return NotFound("Không tìm thấy thông tin nhân viên");
                     return Ok(new StaffDto
                     {
-                        IdStaff = staff.IdStaff,
+                        IdStaff = staff.IdAccount,
                         FullName = staff.FullName,
                         Email = staff.Email,
                         Phone = staff.Phone,
@@ -56,7 +56,7 @@ namespace QuanLyBanHangOnline.Controllers.extensions
                 case "User":
                     var user = await _context.User.FindAsync(userId);
                     if (user == null) return NotFound("Không tìm thấy thông tin người dùng");
-                    return Ok(new { id = user.IdUser, email = user.Email, fullName = user.FullName, role = "User" , address = user.Address , phone = user.Phone });
+                    return Ok(new { id = user.IdAccount, email = user.Email, fullName = user.FullName, role = "User" , address = user.Address , phone = user.Phone });
 
                 default:
                     return BadRequest("Role không hợp lệ");

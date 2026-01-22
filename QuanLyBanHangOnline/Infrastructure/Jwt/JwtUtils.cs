@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using quanlybanhangonline.Models;
+using QuanLyBanHangOnline.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -15,35 +17,26 @@ namespace QuanLyBanHangOnline.Infrastructure.Jwt
             _configuration = configuration; //"Toàn cục"
         }
         //Logic tạo Access Token.
-        public string GenerateJwtToken(int id, string email, string role, int roleId)
+        // 1. Sửa lại hàm tạo Token chính để dùng RoleType
+        public string GenerateJwtToken(Account account)
         {
-            // 1. Chuyển sang dùng List<Claim>
             var claims = new List<Claim>
+    {
+        // Sử dụng IdAccount từ lớp cha chung
+        new Claim(ClaimTypes.NameIdentifier, account.IdAccount.ToString()),
+        new Claim(ClaimTypes.Email, account.Email),
+        // Sử dụng RoleType để phân quyền Admin/Staff/User
+        new Claim(ClaimTypes.Role, account.RoleType),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+    };
+
+            // Nếu là Staff, bạn có thể thêm RoleId riêng nếu cần thiết
+            if (account is Staff staff && staff.RoleId.HasValue)
             {
-                new Claim(ClaimTypes.NameIdentifier, id.ToString()),
-                new Claim(ClaimTypes.Email, email),
-                new Claim(ClaimTypes.Role, role),
-                new Claim("RoleId", roleId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
-            //chìa khóa bí mật (Secret Key)
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])
-            );
+                claims.Add(new Claim("RoleId", staff.RoleId.Value.ToString()));
+            }
 
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(
-                    int.Parse(_configuration["Jwt:ExpireMinutes"])
-                ),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return CreateToken(claims, _configuration["Jwt:Key"], int.Parse(_configuration["Jwt:ExpireMinutes"]));
         }
 
         //Logic tạo chuỗi ngẫu nhiên cho Refresh Token.
@@ -147,15 +140,15 @@ namespace QuanLyBanHangOnline.Infrastructure.Jwt
         }
 
         // Hàm phụ để xử lý lưu Token vào DB và trả về kết quả
-        public async Task<object> GenerateSignInResponse(int id, string email, string role, object entity, int roleId)
+        // 2. Cập nhật hàm phản hồi đăng nhập
+        public object GenerateSignInResponse(Account account)
         {
-            var accessToken = GenerateJwtToken(id, email, role, roleId);
+            var accessToken = GenerateJwtToken(account);
             var refreshToken = GenerateRefreshToken();
 
-            // Sử dụng Reflection để gán giá trị cho Entity (User/Staff/Admin)
-            var type = entity.GetType();
-            type.GetProperty("RefreshToken")?.SetValue(entity, refreshToken);
-            type.GetProperty("RefreshTokenExpiryTime")?.SetValue(entity, DateTime.UtcNow.AddDays(7));
+            // Gán giá trị trực tiếp vì Account đã có các thuộc tính này
+            account.RefreshToken = refreshToken;
+            account.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
 
             return new
             {

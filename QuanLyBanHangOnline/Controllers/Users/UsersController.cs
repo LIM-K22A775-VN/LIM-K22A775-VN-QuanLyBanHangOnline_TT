@@ -86,7 +86,7 @@ namespace QuanLyBanHangOnline.Controllers
                 var user = await _userService.CreateAsync(dto);
 
                 // 2. Tạo cặp Token và gán vào Object user thông qua JwtUtils
-                var response = await _jwtUtils.GenerateSignInResponse(user.IdUser, user.Email, "User", user, 0);
+                var response = _jwtUtils.GenerateSignInResponse(user);
 
                 // 3. Lưu Refresh Token vào Database
                 await _context.SaveChangesAsync();

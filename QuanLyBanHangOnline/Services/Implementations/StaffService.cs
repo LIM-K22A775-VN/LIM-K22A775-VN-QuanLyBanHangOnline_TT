@@ -21,10 +21,10 @@ namespace QuanLyBanHangOnline.Services.Implementations
         {
             var query = _context.Staff
                 .Include(s => s.Role)
-                .OrderBy(s => s.IdStaff)
+                .OrderBy(s => s.IdAccount)
                 .Select(s => new StaffDto
                 {
-                    IdStaff = s.IdStaff,
+                    IdStaff = s.IdAccount,
                     FullName = s.FullName,
                     Email = s.Email,
                     Phone = s.Phone,
@@ -41,12 +41,12 @@ namespace QuanLyBanHangOnline.Services.Implementations
         // Lấy thông tin chi tiết một nhân viên theo ID
         public async Task<StaffDto?> GetByIdAsync(int id)
         {
-            var staff = await _context.Staff.Include(s => s.Role).FirstOrDefaultAsync(s => s.IdStaff == id);
+            var staff = await _context.Staff.Include(s => s.Role).FirstOrDefaultAsync(s => s.IdAccount == id);
             if (staff == null) return null;
 
             return new StaffDto
             {
-                IdStaff = staff.IdStaff,
+                IdStaff = staff.IdAccount,
                 FullName = staff.FullName,
                 Email = staff.Email,
                 Phone = staff.Phone,

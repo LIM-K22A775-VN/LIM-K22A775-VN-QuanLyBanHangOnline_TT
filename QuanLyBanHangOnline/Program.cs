@@ -37,8 +37,8 @@ builder.Services.AddScoped<IAppAuthorizationService, AppAuthorizationService>();
 
 
 builder.Services.AddScoped<IEmailService, EmailService>();
-
-
+builder.Services.AddScoped<IImportService, ImportService>();
+builder.Services.AddScoped<ICartService, CartService>();
 //Cấu hình Authentication  , JWT 
 builder.Services.AddSystemAuthenticationJwt(builder.Configuration);
 

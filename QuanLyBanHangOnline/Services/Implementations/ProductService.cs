@@ -59,39 +59,60 @@ namespace QuanLyBanHangOnline.Services.Implementations
             return MapToResponse(product, detail);
         }
 
-        public async Task<ProductResponseDto> CreateAsync(ProductCreateDto dto)
+        public async Task<ProductResponseDto> CreateAsync(ProductCreateDto dto, int currentUserId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // 1. Xử lý ảnh
+                // 1. Xử lý lưu trữ hình ảnh sản phẩm
                 string fileName = await ImgHelper.SaveImageAsync(dto.ImageFile, _environment.WebRootPath, "products");
 
-                // 2. Lưu vào bảng Product trước
+                // 2. Khởi tạo và lưu thông tin vào bảng Product
                 var product = new Product
                 {
                     Name = dto.Name,
                     Price = dto.Price,
+                    ImportPrice = dto.ImportPrice,
                     StockQuantity = dto.StockQuantity,
                     Category = dto.Category,
                     Image = fileName,
-                    AverageRating = 0 // Mặc định đánh giá 0 sao khi mới tạo
+                    AverageRating = 0
                 };
                 _context.Product.Add(product);
-                await _context.SaveChangesAsync(); // Lúc này product.IdSP sẽ tự sinh ra
+                await _context.SaveChangesAsync(); // Lưu để sinh IdSP cho các bước sau
 
-                // 3. Lưu vào bảng ProductDetail
+                // 3. Khởi tạo và lưu thông tin vào bảng ProductDetail
                 var detail = new ProductDetail
                 {
-                    IdSP = product.IdSP, // Lấy ID vừa sinh ra gán sang đây
+                    IdSP = product.IdSP,
                     Size = dto.Size,
                     Color = dto.Color,
-                    Description = dto.Description ?? "",              
+                    Description = dto.Description ?? "",
                 };
                 _context.ProductDetail.Add(detail);
-                await _context.SaveChangesAsync();
 
-                // Hoàn tất giao dịch
+                // 4. TỰ ĐỘNG TẠO PHIẾU NHẬP (Dựa trên sơ đồ TPT: Account -> Admin/Staff)
+                if (dto.StockQuantity > 0)
+                {
+                    var import = new Import
+                    {
+                        IdAccount = currentUserId, // Gán ID người thực hiện (Admin/Staff từ Token)
+                        ImportDate = DateTime.Now,
+                        TotalCost = dto.StockQuantity * dto.ImportPrice,
+                        ImportDetails = new List<ImportDetail>
+                {
+                    new ImportDetail
+                    {
+                        IdSP = product.IdSP,
+                        Quantity = dto.StockQuantity,
+                        ImportPrice = dto.ImportPrice
+                    }
+                }
+                    };
+                    _context.Import.Add(import);
+                }
+
+                await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 return MapToResponse(product, detail);
@@ -116,6 +137,7 @@ namespace QuanLyBanHangOnline.Services.Implementations
                 // Cập nhật bảng Product
                 product.Name = dto.Name;
                 product.Price = dto.Price;
+                product.ImportPrice = dto.ImportPrice;
                 product.Category = dto.Category;
                 product.StockQuantity = dto.StockQuantity;
 
@@ -179,6 +201,5 @@ namespace QuanLyBanHangOnline.Services.Implementations
             };
         }
 
-       
     }
 }
