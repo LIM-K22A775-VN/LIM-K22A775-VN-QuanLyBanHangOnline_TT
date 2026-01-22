@@ -50,14 +50,43 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(i => i.IdAccount)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // --- 3. SEED DATA CHO ADMIN (Cập nhật theo cấu trúc mới) ---
+        // --- 3. SEED DATA CHO ADMIN STAFF USER(Cập nhật theo cấu trúc mới) ---
         // Lưu ý: Password nên được hash trước khi đưa vào HasData
         modelBuilder.Entity<Admin>().HasData(new Admin
         {
             IdAccount = 1, // ID chung từ Account
-            Email = "admin99@gmail.com",
+            Email = "admin@gmail.com",
             Password = BCrypt.Net.BCrypt.HashPassword("123456"),
             RoleType = "Admin"
+        });
+        modelBuilder.Entity<Staff>().HasData(new Staff
+        {
+            IdAccount = 2, // ID chung từ Account
+            Email = "staff@gmail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("123456"),
+            RoleType = "Staff"
+        });
+        modelBuilder.Entity<User>().HasData(new User
+        {
+            IdAccount = 3, // ID chung từ Account
+            Email = "user@gmail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("123456"),
+            RoleType = "User"
+        });
+
+        modelBuilder.Entity<User>().HasData(new User
+        {
+            IdAccount = 4, // ID chung từ Account
+            Email = "nxtql99@gmail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("123456"),
+            RoleType = "User"
+        });
+        modelBuilder.Entity<User>().HasData(new User
+        {
+            IdAccount = 5, // ID chung từ Account
+            Email = "ndt@gmail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("123456"),
+            RoleType = "User"
         });
 
         // --- 4. CẤU HÌNH CÁC QUAN HỆ KHÁC ---

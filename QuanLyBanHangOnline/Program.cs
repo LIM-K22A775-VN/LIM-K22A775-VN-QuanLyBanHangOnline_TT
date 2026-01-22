@@ -39,6 +39,7 @@ builder.Services.AddScoped<IAppAuthorizationService, AppAuthorizationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IImportService, ImportService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IRevenueService, RevenueService>();
 //Cấu hình Authentication  , JWT 
 builder.Services.AddSystemAuthenticationJwt(builder.Configuration);
 
@@ -105,6 +106,22 @@ builder.Services.AddSwaggerGen(c =>
             },
             new string[] {}
         }
+    });
+
+    // Cấu hình để hiện bộ chọn ngày (DatePicker)
+    c.MapType<DateTime>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Format = "date",
+        Example = new Microsoft.OpenApi.Any.OpenApiString(DateTime.Now.ToString("yyyy-MM-dd"))
+    });
+
+    c.MapType<DateTime?>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Format = "date",
+        Nullable = true,
+        Example = new Microsoft.OpenApi.Any.OpenApiString(DateTime.Now.ToString("yyyy-MM-dd"))
     });
 
 
